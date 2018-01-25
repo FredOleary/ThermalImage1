@@ -20,4 +20,13 @@
         android:layout_height="wrap_content"
         android:id="@+id/imgview"/>
 
+    <TextView
+        android:id="@+id/imageDetect"
+        android:layout_width="wrap_content"
+        android:layout_height="100px"
+        android:text="Hello xxx!"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
 </android.support.constraint.ConstraintLayout>

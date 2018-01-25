@@ -48,6 +48,11 @@ public class ThermalUtil {
     private Scalar low_color = new Scalar(40.0/360*180, 100, 100);
     private  Scalar high_color = new Scalar(50.0/360*180, 255, 255);
 
+    /*
+    Minimum width.. (Empirical) - Detected object must be this percentage of the image height
+     */
+    private static final double minObjectHeightPercent = 55.0;
+
     public Mat getImage(Context context, int resourceId ){
         Mat image = null;
         InputStream stream = null;
@@ -104,7 +109,7 @@ public class ThermalUtil {
 
     }
 
-    public Mat processContours( Mat monoImage, Mat originalImage ){
+    public boolean processContours( Mat monoImage, Mat originalImage ){
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(monoImage, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -153,16 +158,24 @@ public class ThermalUtil {
             }
 
         }
-        if( unionRect != null && DISPLAY_COVER_RECT){
-            Imgproc.rectangle(
-                    originalImage,
-                    new Point(unionRect.x, unionRect.y),
-                    new Point(unionRect.x + unionRect.width, unionRect.y + unionRect.height),
-                    new Scalar(0, 0, 255),
-                    2);
 
+        if( unionRect != null ){
+            double imageWidthPct = (double)unionRect.width/(double)monoImage.width()*100;
+            double imageHeightPct = (double)unionRect.height/(double)monoImage.height()*100;
+            Log.d(TAG, "COVER WIDTH: " + imageWidthPct + "%. COVER HEIGHT: " + imageHeightPct + "%");
+            if( imageHeightPct > minObjectHeightPercent ) {
+                if (DISPLAY_COVER_RECT) {
+                    Imgproc.rectangle(
+                            originalImage,
+                            new Point(unionRect.x, unionRect.y),
+                            new Point(unionRect.x + unionRect.width, unionRect.y + unionRect.height),
+                            new Scalar(0, 0, 255),
+                            2);
+                }
+                return true;
+            }
         }
-        return monoImage;
+        return false;
     }
     private Rect unionRect( Rect r1, Rect r2 ){
         int x, y, w, h;
