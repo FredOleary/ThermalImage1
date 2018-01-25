@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ThermalUtil thermalUtil;
     private int nextIndex = 0;
     private List<Integer> imageIdsOne = Arrays.asList(R.drawable.x001);
+    private boolean showAll = true;
 
     private List<Integer> imageIds = Arrays.asList(
             R.drawable.x001, R.drawable.x002, R.drawable.x003,
@@ -52,8 +53,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     private void processNextImage(){
-        if( nextIndex < imageIds.size()){
-            final Integer resId = imageIds.get(nextIndex);
+        List<Integer> imgList = (showAll) ? imageIds : imageIdsOne;
+        if( nextIndex < imgList.size()){
+            final Integer resId = imgList.get(nextIndex);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 public void run() {
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         originalImage = thermalUtil.getImage( this, imageId);
         if(originalImage != null){
             monoChromeImage = thermalUtil.getMonoChromeImage( originalImage );
+ //           detected = thermalUtil.processBlob( monoChromeImage, originalImage);
             detected = thermalUtil.processContours( monoChromeImage, originalImage);
             thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
             Log.d(TAG, "Found image");

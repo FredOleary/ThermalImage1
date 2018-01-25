@@ -10,11 +10,15 @@ import android.widget.ImageView;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.FileNotFoundException;
@@ -24,6 +28,7 @@ import java.util.List;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static org.opencv.features2d.Features2d.DRAW_OVER_OUTIMG;
 
 /**
  * Created by fredoleary on 1/24/18.
@@ -46,7 +51,7 @@ public class ThermalUtil {
 
      */
     private Scalar low_color = new Scalar(40.0/360*180, 100, 100);
-    private  Scalar high_color = new Scalar(50.0/360*180, 255, 255);
+    private  Scalar high_color = new Scalar(60.0/360*180, 255, 255);
 
     /*
     Minimum width.. (Empirical) - Detected object must be this percentage of the image height
@@ -93,12 +98,13 @@ public class ThermalUtil {
     public Mat getMonoChromeImage(Mat image ){
         Mat hsvImage;
         hsvImage = new Mat();
+        Mat  blurredImage = new Mat();
+        Imgproc.blur(image, blurredImage, new Size(100, 100));
         // Convert to HSV for filtering
-        Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
+
+        Imgproc.cvtColor(blurredImage, hsvImage, Imgproc.COLOR_RGB2HSV);
         Mat mask = new Mat();
 
-//        Scalar low_color = new Scalar(40.0/360*180, 100, 100);
-//        Scalar high_color = new Scalar(50.0/360*180, 255, 255);
         Core.inRange(hsvImage, low_color, high_color, mask);
 
 
@@ -107,6 +113,16 @@ public class ThermalUtil {
         Imgproc.Canny(mask, contourImage, 0, 40);
         return contourImage;
 
+    }
+
+    public boolean processBlob( Mat monoImage, Mat originalImage ) {
+        MatOfKeyPoint matOfKeyPoints = new MatOfKeyPoint();
+
+        FeatureDetector blobDetector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
+        blobDetector.detect(monoImage, matOfKeyPoints);
+        Features2d.drawKeypoints(monoImage, matOfKeyPoints, originalImage, new Scalar(0,0,255), DRAW_OVER_OUTIMG);
+        Log.d(TAG,"foo");
+        return false;
     }
 
     public boolean processContours( Mat monoImage, Mat originalImage ){
@@ -145,7 +161,7 @@ public class ThermalUtil {
                 }else{
                     unionRect = unionRect( unionRect, r);
                 }
-                Log.d(TAG, "Rectangle area: " + r.area());
+                Log.d(TAG, "Rectangle area included: " + r.area());
 
                 if(DISPLAY_CONTOUR_RECTS) {
                     Imgproc.rectangle(
@@ -155,6 +171,9 @@ public class ThermalUtil {
                             new Scalar(0, 0, 255),
                             2);
                 }
+            }else{
+                Log.d(TAG, "Rectangle area too small: " + r.area());
+
             }
 
         }
