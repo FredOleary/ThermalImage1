@@ -216,9 +216,9 @@ public class ThermalUtil {
 
                 // Get the hull
                 MatOfInt hull = new MatOfInt();
-                Imgproc.convexHull(approxCurveInt, hull);
+                Imgproc.convexHull(contour, hull);
 
-                MatOfPoint hullPoints = hullToMapOfPoint(approxCurveInt, hull );
+                MatOfPoint hullPoints = hullToMapOfPoint(contour, hull );
                  if( DISPLAY_HULL ) {
                     displayPoly( originalImage, monoImage, hullPoints, new Scalar(0, 0, 255) );     // Blue
                 }
