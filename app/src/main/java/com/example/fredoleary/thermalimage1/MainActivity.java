@@ -11,8 +11,10 @@ import android.widget.TextView;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,10 +23,11 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String    TAG = "ThermalImage1";
     private Mat monoChromeImage;
+    private Mat contourImage;
     private Mat originalImage;
     private ThermalUtil thermalUtil;
     private int nextIndex = 0;
-    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.x001);
+    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.x012);
     private boolean showAll = true;
 
     private List<Integer> imageIds = Arrays.asList(
@@ -33,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.x007, R.drawable.x008, R.drawable.x009,
             R.drawable.x010, R.drawable.x011, R.drawable.x012,
             R.drawable.x013, R.drawable.x014, R.drawable.x015,
-            R.drawable.x016 );
+            R.drawable.x016, R.drawable.testx001 );
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 
@@ -75,9 +78,13 @@ public class MainActivity extends AppCompatActivity {
         thermalUtil = new ThermalUtil();
         originalImage = thermalUtil.getImage( this, imageId);
         if(originalImage != null){
-            monoChromeImage = thermalUtil.getMonoChromeImage( originalImage );
- //           detected = thermalUtil.processBlob( monoChromeImage, originalImage);
-            detected = thermalUtil.processContours( monoChromeImage, originalImage);
+            Mat[] maskAndContours = thermalUtil.getMonoChromeImage( originalImage );
+            monoChromeImage = maskAndContours[0];
+            contourImage = maskAndContours[1];
+//            detected = thermalUtil.processBlob( this, monoChromeImage, originalImage);
+//            Mat monoImageInv = new Mat();
+//            Core.bitwise_not ( monoChromeImage, monoImageInv );
+            detected = thermalUtil.processContours( contourImage, originalImage);
             thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
             Log.d(TAG, "Found image");
             TextView resultTextView = (TextView)findViewById(R.id.imageDetect);
