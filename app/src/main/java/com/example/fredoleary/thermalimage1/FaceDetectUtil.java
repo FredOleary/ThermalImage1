@@ -66,9 +66,14 @@ public class FaceDetectUtil {
     private  Scalar high_color = new Scalar(60.0/360*180, 255, 255);
 
     /*
-    Minimum size.. (Empirical) - Detected object must be large than this size. E.g. 10% of the image size
+    Minimum size.. (Empirical) - Detected object must be larger than this size. E.g. 10% of the image size
      */
     private static final int minRectSizePct = 10;
+
+    /*
+    Maximum size.. (Empirical) - Detected object must be smaller than this size. E.g. 90% of the image size
+    */
+    private static final int maxRectSizePct = 90;
 
     /*
     Width/Height ratio. Must be < maxWidthPct and > minWidthPct
@@ -226,7 +231,7 @@ public class FaceDetectUtil {
             displayPoly( originalImage, monoImage, contour, new Scalar(255, 0, 0) );     // Red
         }
         int rectAreaPct = (int)(boundingRect.area()/(double)imageSize * 100);
-        if( rectAreaPct >  minRectSizePct) {
+        if( rectAreaPct >  minRectSizePct &&  rectAreaPct < maxRectSizePct) {
             Log.d(TAG, "Rectangle included. Area%: " + rectAreaPct);
 
             // approximates a polygonal curve with the specified precision
@@ -320,10 +325,12 @@ public class FaceDetectUtil {
 //                    }
 //                }
 
+            }else{
+                Log.d(TAG, "Contour excluded. Too few numberVertices: " + numberVertices);
             }
 
         }else{
-            Log.d(TAG, "Rectangle excluded. Area too small, Area%: " + rectAreaPct);
+            Log.d(TAG, "Rectangle excluded. Area too small/large, Area%: " + rectAreaPct);
         }
         return null;
     }

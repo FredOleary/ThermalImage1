@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private Mat originalImage;
     private FaceDetectUtil thermalUtil;
     private int nextIndex = 0;
-    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.z003);
+    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.cc003);
     private boolean showAll = true;
 
     private List<Integer> imageIds = Arrays.asList(
@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.x010, R.drawable.x011, R.drawable.x012,
             R.drawable.x013, R.drawable.x014, R.drawable.x015,
             R.drawable.y007, R.drawable.y001, R.drawable.z003,
+            R.drawable.aa011, R.drawable.aa026, R.drawable.aa031,
+            R.drawable.bb096, R.drawable.bb101, R.drawable.cc003,
             R.drawable.x016, R.drawable.testx001 );
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
