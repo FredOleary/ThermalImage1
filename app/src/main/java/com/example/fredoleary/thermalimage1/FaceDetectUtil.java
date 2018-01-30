@@ -76,6 +76,19 @@ public class FaceDetectUtil {
     private static final int maxWidthPct =100;
     private static final int minWidthPct =30;
 
+    public Bitmap detectFaces(Bitmap bitmap) {
+        Mat originalImage = new Mat();
+        Utils.bitmapToMat(bitmap, originalImage);
+        Mat[] maskAndContours = getMonoChromeImage(originalImage);
+//        Mat monoChromeImage = maskAndContours[0];
+        Mat contourImage = maskAndContours[1];
+//            detected = processBlob( this, monoChromeImage, originalImage);
+//            Mat monoImageInv = new Mat();
+//            Core.bitwise_not ( monoChromeImage, monoImageInv );
+        Bitmap detectedImage = processContours(contourImage, originalImage);
+        Log.d(TAG, "detectFaces detected=" + (detectedImage != null ? true : false));
+        return detectedImage;
+    }
 
     public Mat getImage(Context context, int resourceId ){
         Mat image = null;
@@ -177,22 +190,31 @@ public class FaceDetectUtil {
         return false;
     }
 
-    public boolean processContours( Mat monoImage, Mat originalImage ) {
+    public Bitmap processContours( Mat monoImage, Mat originalImage ) {
         //testConvexityDefects();
-        boolean detected = false;
 
         List<MatOfPoint> contours = new ArrayList();
         Mat hierarchy = new Mat();
         Imgproc.findContours(monoImage, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Mat detectedImage = null;
         for (MatOfPoint contour : contours) {
-            if( processContour(contour, monoImage, originalImage)){
-                detected = true;
+            Mat result = processContour(contour, monoImage, originalImage);
+            if(result != null ){
+                detectedImage = result;
             }
         }
-        return detected;
+        if (detectedImage != null) {
+            Bitmap bitMap = Bitmap.createBitmap(detectedImage.cols(),
+                    detectedImage.rows(),Bitmap.Config.RGB_565);
+
+            Utils.matToBitmap(detectedImage, bitMap);
+            return bitMap;
+        } else {
+            return null;
+        }
     }
 
-    private boolean processContour( MatOfPoint contour, Mat monoImage, Mat originalImage ){
+    private Mat processContour( MatOfPoint contour, Mat monoImage, Mat originalImage ){
         boolean faceDetected = false;
 
         Rect boundingRect = Imgproc.boundingRect(contour);
@@ -261,7 +283,7 @@ public class FaceDetectUtil {
                 }else{
                     Log.d(TAG, "Shape MISMATCH: areaRatioPct " + areaRatioPct );
                 }
-                return faceDetected;
+                return faceDetected ? originalImage : null;
 
 //                // test defects from hull
 //                MatOfInt4 convexityDefects = new MatOfInt4();
@@ -303,7 +325,7 @@ public class FaceDetectUtil {
         }else{
             Log.d(TAG, "Rectangle excluded. Area too small, Area%: " + rectAreaPct);
         }
-        return faceDetected;
+        return null;
     }
 
     private void displayPoly( Mat originalImage, Mat monoImage, MatOfPoint poly, Scalar color ){

@@ -1,5 +1,6 @@
 package com.example.fredoleary.thermalimage1;
 
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         processNextImage();
     }
     private void processImage( Integer imageId){
-        boolean detected = false;
+        Bitmap imageDetected = null;
         thermalUtil = new FaceDetectUtil();
         originalImage = thermalUtil.getImage( this, imageId);
         if(originalImage != null){
@@ -81,10 +82,10 @@ public class MainActivity extends AppCompatActivity {
 //            detected = thermalUtil.processBlob( this, monoChromeImage, originalImage);
 //            Mat monoImageInv = new Mat();
 //            Core.bitwise_not ( monoChromeImage, monoImageInv );
-            detected = thermalUtil.processContours( contourImage, originalImage);
+            imageDetected = thermalUtil.processContours( contourImage, originalImage);
             thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
             TextView resultTextView = (TextView)findViewById(R.id.imageDetect);
-            if( detected ){
+            if( imageDetected != null ){
                 resultTextView.setText("Image detected");
             }else{
                 resultTextView.setText("No Image detected");
