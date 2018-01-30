@@ -118,7 +118,7 @@ public class ThermalUtil {
         Mat  blurredImage = new Mat();
         Mat[] results= new Mat[2];
 
-        Imgproc.blur(image, blurredImage, new Size(100, 100));
+        //Imgproc.blur(image, blurredImage, new Size(100, 100));
         // Convert to HSV for filtering
 
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
@@ -126,7 +126,7 @@ public class ThermalUtil {
 
         Core.inRange(hsvImage, low_color, high_color, mask);
 
-        int morph_size = 4;
+        int morph_size = 5;
         Mat element = Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( 2*morph_size + 1, 2*morph_size+1 ), new Point( morph_size, morph_size ) );
 
         Mat morphedMask = new Mat(); // result matrix
@@ -193,6 +193,10 @@ public class ThermalUtil {
 
         // Check if the contour is large enough
 
+        if( DISPLAY_CONTOURS ) {
+            displayPoly( originalImage, monoImage, contour, new Scalar(255, 0, 0) );     // Red
+        }
+
         if( boundingRect.area() >  minRectSize) {
             Log.d(TAG, "Rectangle included. Area: " + boundingRect.area());
 
@@ -205,27 +209,24 @@ public class ThermalUtil {
             // Require at least 5 vertices... (empirical)
             if( numberVertices > 5){
                 Log.d(TAG, "Shape included. numberVertices: " + numberVertices);
-                if( DISPLAY_CONTOURS ) {
-                    displayPoly( originalImage, monoImage, contour, new Scalar(255, 0, 0) );     // Red
-                }
 
                 MatOfPoint approxCurveInt = new MatOfPoint(approxCurve.toArray());
                 if( DISPLAY_APPROX_CONTOURS ) {
-                    displayPoly( originalImage, monoImage, approxCurveInt, new Scalar(255, 255, 255) );     // white
+                    displayPoly( originalImage, monoImage, approxCurveInt, new Scalar(30, 255, 255) );     // white
                 }
 
                 // Get the hull
                 MatOfInt hull = new MatOfInt();
-                Imgproc.convexHull(contour, hull);
+                Imgproc.convexHull(approxCurveInt, hull);
 
-                MatOfPoint hullPoints = hullToMapOfPoint(contour, hull );
+                MatOfPoint hullPoints = hullToMapOfPoint(approxCurveInt, hull );
                  if( DISPLAY_HULL ) {
                     displayPoly( originalImage, monoImage, hullPoints, new Scalar(0, 0, 255) );     // Blue
                 }
 
                 // test defects from hull
                 MatOfInt4 convexityDefects = new MatOfInt4();
-                Imgproc.convexityDefects(contour, hull, convexityDefects);
+                Imgproc.convexityDefects(approxCurveInt, hull, convexityDefects);
                 faceDetected = true;
                 if( convexityDefects.total() > 0 ) {
                     double acculatedDistance = 0;

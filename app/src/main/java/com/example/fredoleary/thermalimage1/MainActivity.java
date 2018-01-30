@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private ThermalUtil thermalUtil;
     private int nextIndex = 0;
     private List<Integer> imageIdsOne = Arrays.asList(R.drawable.x012);
-    private boolean showAll = true;
+    private boolean showAll = false;
 
     private List<Integer> imageIds = Arrays.asList(
             R.drawable.x001, R.drawable.x002, R.drawable.x003,
