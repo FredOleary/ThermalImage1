@@ -1,6 +1,5 @@
 package com.example.fredoleary.thermalimage1;
 
-import android.content.Context;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,11 +10,8 @@ import android.widget.TextView;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,10 +21,10 @@ public class MainActivity extends AppCompatActivity {
     private Mat monoChromeImage;
     private Mat contourImage;
     private Mat originalImage;
-    private ThermalUtil thermalUtil;
+    private FaceDetectUtil thermalUtil;
     private int nextIndex = 0;
-    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.x012);
-    private boolean showAll = false;
+    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.z003);
+    private boolean showAll = true;
 
     private List<Integer> imageIds = Arrays.asList(
             R.drawable.x001, R.drawable.x002, R.drawable.x003,
@@ -36,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.x007, R.drawable.x008, R.drawable.x009,
             R.drawable.x010, R.drawable.x011, R.drawable.x012,
             R.drawable.x013, R.drawable.x014, R.drawable.x015,
+            R.drawable.y007, R.drawable.y001, R.drawable.z003,
             R.drawable.x016, R.drawable.testx001 );
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -75,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void processImage( Integer imageId){
         boolean detected = false;
-        thermalUtil = new ThermalUtil();
+        thermalUtil = new FaceDetectUtil();
         originalImage = thermalUtil.getImage( this, imageId);
         if(originalImage != null){
             Mat[] maskAndContours = thermalUtil.getMonoChromeImage( originalImage );
@@ -86,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
 //            Core.bitwise_not ( monoChromeImage, monoImageInv );
             detected = thermalUtil.processContours( contourImage, originalImage);
             thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
-            Log.d(TAG, "Found image");
             TextView resultTextView = (TextView)findViewById(R.id.imageDetect);
             if( detected ){
                 resultTextView.setText("Image detected");

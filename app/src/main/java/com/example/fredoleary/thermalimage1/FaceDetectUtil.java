@@ -44,17 +44,17 @@ import static org.opencv.imgproc.Imgproc.MORPH_TOPHAT;
  * Created by fredoleary on 1/24/18.
  */
 
-public class ThermalUtil {
+public class FaceDetectUtil {
     /*
     Flags for various processing
      */
     private static boolean DISPLAY_CONTOURS =  FALSE;            // Displays the contour lines in red
     private static boolean DISPLAY_CONTOUR_RECTS =  TRUE;      // Displays the contour covering rectangle in blue
     private static boolean DISPLAY_COVER_RECT =  FALSE;         // Displays the union of all contour covering rectangles in blue
-    private static boolean DISPLAY_APPROX_CONTOURS = FALSE;     // Displays the approx lines in
-    private static boolean DISPLAY_HULL = FALSE;                 // Displays the Hull in blue
+    private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
+    private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
-    private static final String    TAG = "ThermalUtil";
+    private static final String    TAG = "FaceDetectUtil";
 
     /* HSV filter colors. Note these are derived empiracally from paint brush.
      RANGES:
@@ -66,9 +66,15 @@ public class ThermalUtil {
     private  Scalar high_color = new Scalar(60.0/360*180, 255, 255);
 
     /*
-    Minimum size.. (Empirical) - Detected object must be this size
+    Minimum size.. (Empirical) - Detected object must be large than this size. E.g. 10% of the image size
      */
-    private static final int minRectSize = 20000;
+    private static final int minRectSizePct = 10;
+
+    /*
+    Width/Height ratio. Must be < maxWidthPct and > minWidthPct
+     */
+    private static final int maxWidthPct =100;
+    private static final int minWidthPct =30;
 
 
     public Mat getImage(Context context, int resourceId ){
@@ -190,15 +196,16 @@ public class ThermalUtil {
         boolean faceDetected = false;
 
         Rect boundingRect = Imgproc.boundingRect(contour);
+        int imageSize = monoImage.width() * monoImage.height();
 
         // Check if the contour is large enough
 
         if( DISPLAY_CONTOURS ) {
             displayPoly( originalImage, monoImage, contour, new Scalar(255, 0, 0) );     // Red
         }
-
-        if( boundingRect.area() >  minRectSize) {
-            Log.d(TAG, "Rectangle included. Area: " + boundingRect.area());
+        int rectAreaPct = (int)(boundingRect.area()/(double)imageSize * 100);
+        if( rectAreaPct >  minRectSizePct) {
+            Log.d(TAG, "Rectangle included. Area%: " + rectAreaPct);
 
             // approximates a polygonal curve with the specified precision
             MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
@@ -224,30 +231,22 @@ public class ThermalUtil {
                     displayPoly( originalImage, monoImage, hullPoints, new Scalar(0, 0, 255) );     // Blue
                 }
 
-                // test defects from hull
-                MatOfInt4 convexityDefects = new MatOfInt4();
-                Imgproc.convexityDefects(approxCurveInt, hull, convexityDefects);
-                faceDetected = true;
-                if( convexityDefects.total() > 0 ) {
-                    double acculatedDistance = 0;
-                    int defects[] = convexityDefects.toArray();
-                    // see https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=convexhull#convexitydefects
-                    // For details on the format, (ugly) of results of convexityDefects
-                    for (int idx = 3; idx < defects.length; idx += 4) {
-                        double distance = (double) defects[idx] / 256;
-                        Log.d(TAG, "Distance: " + distance);
-                        acculatedDistance += distance;
-                    }
-                    double defectPct = acculatedDistance/boundingRect.area() *100;
-                    Log.d(TAG, "acculatedDistance: " + acculatedDistance +
-                             ". boundingRect.width " + boundingRect.width +
-                             ". boundingRect.height " + boundingRect.height +
-                             ". defectPct: " + defectPct);
+                double hullArea = Imgproc.contourArea( hullPoints);
+                double polyArea = Imgproc.contourArea( approxCurveInt);
+                int areaRatioPct = (int)(polyArea/hullArea *100);
 
-                    if(defectPct > 0.9 ){       // Empirical
-                        faceDetected = false;
-                    }else{
-                        if(DISPLAY_CONTOUR_RECTS) {
+//                Log.d(TAG, "hullArea: " + hullArea +
+//                        ". polyArea " + polyArea +
+//                        ". areaRatioPct: " + areaRatioPct);
+
+                if( areaRatioPct > 85 ){
+                    Log.d(TAG, "Shape MATCH: areaRatioPct " + areaRatioPct );
+
+                    int widthPct = (int)((double)boundingRect.width/(double)boundingRect.height*100);
+                    if( widthPct <= maxWidthPct && widthPct >= minWidthPct) {
+                        Log.d(TAG, "Width/Height MATCH: widthPct " + widthPct );
+                        faceDetected = true;
+                        if (DISPLAY_CONTOUR_RECTS) {
                             Imgproc.rectangle(
                                     originalImage,
                                     new Point(boundingRect.x, boundingRect.y),
@@ -255,14 +254,54 @@ public class ThermalUtil {
                                     new Scalar(0, 0, 255),
                                     2);
                         }
-
+                    }else{
+                        Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct );
                     }
+
+                }else{
+                    Log.d(TAG, "Shape MISMATCH: areaRatioPct " + areaRatioPct );
                 }
                 return faceDetected;
+
+//                // test defects from hull
+//                MatOfInt4 convexityDefects = new MatOfInt4();
+//                Imgproc.convexityDefects(approxCurveInt, hull, convexityDefects);
+//                faceDetected = true;
+//                if( convexityDefects.total() > 0 ) {
+//                    double acculatedDistance = 0;
+//                    int defects[] = convexityDefects.toArray();
+//                    // see https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=convexhull#convexitydefects
+//                    // For details on the format, (ugly) of results of convexityDefects
+//                    for (int idx = 3; idx < defects.length; idx += 4) {
+//                        double distance = (double) defects[idx] / 256;
+//                        Log.d(TAG, "Distance: " + distance);
+//                        acculatedDistance += distance;
+//                    }
+//                    double defectPct = acculatedDistance/boundingRect.area() *100;
+//                    Log.d(TAG, "acculatedDistance: " + acculatedDistance +
+//                             ". boundingRect.width " + boundingRect.width +
+//                             ". boundingRect.height " + boundingRect.height +
+//                             ". defectPct: " + defectPct);
+//
+//                    if(defectPct > 0.9 ){       // Empirical
+//                        faceDetected = false;
+//                    }else{
+//                        if(DISPLAY_CONTOUR_RECTS) {
+//                            Imgproc.rectangle(
+//                                    originalImage,
+//                                    new Point(boundingRect.x, boundingRect.y),
+//                                    new Point(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height),
+//                                    new Scalar(0, 0, 255),
+//                                    2);
+//                        }
+//
+//                    }
+//                }
+
             }
 
         }else{
-            Log.d(TAG, "Rectangle excluded. Area too small: " + boundingRect.area());
+            Log.d(TAG, "Rectangle excluded. Area too small, Area%: " + rectAreaPct);
         }
         return faceDetected;
     }
