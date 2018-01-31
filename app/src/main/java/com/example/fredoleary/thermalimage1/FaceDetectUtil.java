@@ -61,9 +61,17 @@ public class FaceDetectUtil {
         Paintbrush uses 0-360 range for Hue (H), openCV uses 0-180 range
         Paintbrush uses 0-100 range for Saturation/Value (H/V), openCV uses 0-255 range
 
+        From Temperature to Color convertor
+        rgb=E0CE00 r=224 g=206 b=0 temperature=32.0, Min temp
+        rgb=E06600 r=224 g=102 b=0 temperature=40.0, Max temp
+
+        rgb=E0CE00 in HSV H = 55 (In range 0-360), S = 100%, V = 88%
+        rgb=E06600 in HSV H = 27 (In range 0-360), S = 100%, V = 88%
+
+
      */
-    private Scalar low_color = new Scalar(40.0/360*180, 100, 100);
-    private  Scalar high_color = new Scalar(55.0/360*180, 255, 255);
+    private Scalar low_color = new Scalar(27.0/360*180, 100.0/100*255, 87.0/100*255);
+    private  Scalar high_color = new Scalar(55.0/360*180, 100.0/100*255, 89.0/100*255);
 
     /*
     Minimum size.. (Empirical) - Detected object must be larger than this size. E.g. 10% of the image size
@@ -283,7 +291,7 @@ public class FaceDetectUtil {
                     int screenPct = (int)((double)boundingRect.width/(double)screenWidth*100);
 
                     if(screenPct < maxScreenPct ) {
-                        Log.d(TAG, "Image width: maxScreenPct " + screenPct);
+                        Log.d(TAG, "Image width OK: maxScreenPct " + screenPct);
 
                         // Checking ratio of width to height
                         int widthPct = (int) ((double) boundingRect.width / (double) boundingRect.height * 100);

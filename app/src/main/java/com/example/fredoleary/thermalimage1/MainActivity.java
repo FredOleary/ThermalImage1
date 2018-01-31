@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = true;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s14_019, false )
+            new imageEntry( R.drawable.x002, true )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.x012, false ),
             new imageEntry( R.drawable.x013, false ),
             new imageEntry( R.drawable.x014, true ),
-            new imageEntry( R.drawable.x015, false ),
+            new imageEntry( R.drawable.x015, true ),
             new imageEntry( R.drawable.x016, true ),
 
             new imageEntry( R.drawable.y001, false ),
