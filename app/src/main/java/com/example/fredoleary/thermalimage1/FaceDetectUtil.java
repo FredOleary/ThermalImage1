@@ -68,9 +68,9 @@ public class FaceDetectUtil {
         rgb=E0CE00 in HSV H = 55 (In range 0-360), S = 100%, V = 88%
         rgb=E06600 in HSV H = 27 (In range 0-360), S = 100%, V = 88%
 
-
+        Note: Empirically a range of S/V values is required, E.g. 90-100 %
      */
-    private Scalar low_color = new Scalar(27.0/360*180, 100.0/100*255, 87.0/100*255);
+    private Scalar low_color = new Scalar(27.0/360*180, 90.0/100*255, 87.0/100*255);
     private  Scalar high_color = new Scalar(55.0/360*180, 100.0/100*255, 89.0/100*255);
 
     /*
