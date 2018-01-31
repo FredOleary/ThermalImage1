@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = true;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.x014, true )
+            new imageEntry( R.drawable.s12_005, false )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(
@@ -61,30 +61,31 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.y007, false ),
             new imageEntry( R.drawable.z003, false ),
 
-            new imageEntry( R.drawable.aa011, false ),
-            new imageEntry( R.drawable.aa026, false ),
-            new imageEntry( R.drawable.aa031, false ),
+            new imageEntry( R.drawable.s10_011, false ),
+            new imageEntry( R.drawable.s10_026, false ),
+            new imageEntry( R.drawable.s10_031, false ),
 
-            new imageEntry( R.drawable.bb087, false ),
-            new imageEntry( R.drawable.bb096, false ),
-            new imageEntry( R.drawable.bb101, false ),
+            new imageEntry( R.drawable.s11_087, false ),
+            new imageEntry( R.drawable.s11_096, false ),
+            new imageEntry( R.drawable.s11_101, false ),
+            new imageEntry( R.drawable.s11_114, false ),
 
-            new imageEntry( R.drawable.cc001, false ),
-            new imageEntry( R.drawable.cc003, false ),
-            new imageEntry( R.drawable.cc005, false )
+            new imageEntry( R.drawable.s12_001, false ),
+            new imageEntry( R.drawable.s12_003, false ),
+            new imageEntry( R.drawable.s12_005, false ),
 
+            new imageEntry( R.drawable.s1_003, false ),
+            new imageEntry( R.drawable.s1_008, false ),
+            new imageEntry( R.drawable.s2_009, false ),
+            new imageEntry( R.drawable.s3_004, false ),
+            new imageEntry( R.drawable.s4_053, false ),
+            new imageEntry( R.drawable.s4_018, false ),      // !!!!!!! should fail. Its a finger - not a head
+            new imageEntry( R.drawable.s5_021, false ),
+            new imageEntry( R.drawable.s5_001, false ),
+            new imageEntry( R.drawable.s6_014, true ),
+            new imageEntry( R.drawable.s6_061, true ),
+            new imageEntry( R.drawable.s7_042, true )
             );
-    private List<Integer> imageIds = Arrays.asList(
-            R.drawable.x001, R.drawable.x002, R.drawable.x003,
-            R.drawable.x004, R.drawable.x005, R.drawable.x006,
-            R.drawable.x007, R.drawable.x008, R.drawable.x009,
-            R.drawable.x010, R.drawable.x011, R.drawable.x012,
-            R.drawable.x013, R.drawable.x014, R.drawable.x015,
-            R.drawable.y007, R.drawable.y001, R.drawable.z003,
-            R.drawable.aa011, R.drawable.aa026, R.drawable.aa031,
-            R.drawable.bb096, R.drawable.bb101, R.drawable.bb087,
-            R.drawable.cc001, R.drawable.cc003, R.drawable.cc005,
-            R.drawable.x016, R.drawable.testx001 );
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 
