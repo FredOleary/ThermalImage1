@@ -81,6 +81,11 @@ public class FaceDetectUtil {
     private static final int maxWidthPct =100;
     private static final int minWidthPct =30;
 
+    /*
+    Image width cannoy exceed maxScreenPct of the screen width
+     */
+    private static final int maxScreenPct = 90;
+
     public Bitmap detectFaces(Bitmap bitmap) {
         Mat originalImage = new Mat();
         Utils.bitmapToMat(bitmap, originalImage);
@@ -269,20 +274,35 @@ public class FaceDetectUtil {
                 if( areaRatioPct > 85 ){
                     Log.d(TAG, "Shape MATCH: areaRatioPct " + areaRatioPct );
 
-                    int widthPct = (int)((double)boundingRect.width/(double)boundingRect.height*100);
-                    if( widthPct <= maxWidthPct && widthPct >= minWidthPct) {
-                        Log.d(TAG, "Width/Height MATCH: widthPct " + widthPct );
-                        faceDetected = true;
-                        if (DISPLAY_CONTOUR_RECTS) {
-                            Imgproc.rectangle(
-                                    originalImage,
-                                    new Point(boundingRect.x, boundingRect.y),
-                                    new Point(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height),
-                                    new Scalar(0, 0, 255),
-                                    2);
+                    // Checking that width fits withing screen. (Too wide is rejected)
+                    int screenWidth = monoImage.width();
+                    if( screenWidth == 640 ){
+                        // There is an 80 pixel, left/right margin... (TODO CLeanup)
+                        screenWidth -= 2 *80;
+                    }
+                    int screenPct = (int)((double)boundingRect.width/(double)screenWidth*100);
+
+                    if(screenPct < maxScreenPct ) {
+                        Log.d(TAG, "Image width: maxScreenPct " + screenPct);
+
+                        // Checking ratio of width to height
+                        int widthPct = (int) ((double) boundingRect.width / (double) boundingRect.height * 100);
+                        if (widthPct <= maxWidthPct && widthPct >= minWidthPct) {
+                            Log.d(TAG, "Width/Height MATCH: widthPct " + widthPct);
+                            faceDetected = true;
+                            if (DISPLAY_CONTOUR_RECTS) {
+                                Imgproc.rectangle(
+                                        originalImage,
+                                        new Point(boundingRect.x, boundingRect.y),
+                                        new Point(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height),
+                                        new Scalar(0, 0, 255),
+                                        2);
+                            }
+                        } else {
+                            Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct);
                         }
                     }else{
-                        Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct );
+                        Log.d(TAG, "Image too WIDE: maxScreenPct " + screenPct);
                     }
 
                 }else{
