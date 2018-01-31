@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = true;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s14_019, false )
+            new imageEntry( R.drawable.s12_005, true )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(
@@ -85,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.s6_014, true ),
             new imageEntry( R.drawable.s6_061, true ),
             new imageEntry( R.drawable.s7_042, true ),
-            new imageEntry( R.drawable.s13_011, false )
+            new imageEntry( R.drawable.s13_011, false ),
+            new imageEntry( R.drawable.s14_019, false )
             );
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {

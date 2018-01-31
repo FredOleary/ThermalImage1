@@ -62,8 +62,22 @@ public class FaceDetectUtil {
         Paintbrush uses 0-100 range for Saturation/Value (H/V), openCV uses 0-255 range
 
      */
-    private Scalar low_color = new Scalar(40.0/360*180, 100, 100);
-    private  Scalar high_color = new Scalar(55.0/360*180, 255, 255);
+    /*
+    RGB Colors ranges for thermal camera HEX. 40 deg C = E06600, 32 deg C = E0CE00
+    E06600 = RGB ( 224, 102, 0)
+    E0CE00 = RGB ( 224, 206, 0)
+     */
+
+    private Scalar low_color = new Scalar(220, 100, 0, 255);             //40 deg C
+    private  Scalar high_color = new Scalar(228, 210, 255, 255);     // 32 degrees c
+
+//    private Scalar low_color = new Scalar(40.0/360*180, 100, 100);
+//    private  Scalar high_color = new Scalar(60.0/360*180, 255, 255);
+
+//    private Scalar low_color = new Scalar(40.0/360*180, 255.0, 88.0/100*255);
+//    private Scalar low_color = new Scalar(27.0/360*180, 255, 88.0/100*255);     // 40 degrees c
+
+//    private  Scalar high_color = new Scalar(55.0/360*180, 255.0, 88.0/100*255);  // 32 degrees c
 
     /*
     Minimum size.. (Empirical) - Detected object must be larger than this size. E.g. 10% of the image size
@@ -150,10 +164,10 @@ public class FaceDetectUtil {
         //Imgproc.blur(image, blurredImage, new Size(100, 100));
         // Convert to HSV for filtering
 
-        Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
+        //Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
         Mat mask = new Mat();
 
-        Core.inRange(hsvImage, low_color, high_color, mask);
+        Core.inRange(image, low_color, high_color , mask);
 
         int morph_size = 5;
         Mat element = Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( 2*morph_size + 1, 2*morph_size+1 ), new Point( morph_size, morph_size ) );
