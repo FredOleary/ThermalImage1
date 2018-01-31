@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = true;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s13_011, false )
+            new imageEntry( R.drawable.s14_019, false )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(

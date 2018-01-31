@@ -63,7 +63,7 @@ public class FaceDetectUtil {
 
      */
     private Scalar low_color = new Scalar(40.0/360*180, 100, 100);
-    private  Scalar high_color = new Scalar(60.0/360*180, 255, 255);
+    private  Scalar high_color = new Scalar(55.0/360*180, 255, 255);
 
     /*
     Minimum size.. (Empirical) - Detected object must be larger than this size. E.g. 10% of the image size
