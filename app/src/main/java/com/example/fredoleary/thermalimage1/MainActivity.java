@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = false;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.png_from_email, false )
+            new imageEntry( R.drawable.s15_001, true )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(

@@ -38,7 +38,7 @@ import static java.lang.Boolean.TRUE;
 import static org.opencv.features2d.FeatureDetector.FAST;
 import static org.opencv.features2d.Features2d.DRAW_OVER_OUTIMG;
 import static org.opencv.imgproc.Imgproc.MORPH_DILATE;
-import static org.opencv.imgproc.Imgproc.MORPH_TOPHAT;
+
 
 /**
  * Created by fredoleary on 1/24/18.
@@ -54,7 +54,17 @@ public class FaceDetectUtil {
     private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
     private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
-    private static final String    TAG = "FaceDetectUtil";
+    private static boolean DISPLAY_EXTRA_LOGS = true;
+    private int[] RGBMinRed = new int[3];
+    private int[] RGBMaxRed = new int[3];
+
+    private int[] RGBMinGreen = new int[3];
+    private int[] RGBMaxGreen = new int[3];
+
+    private int[] RGBMinBlue = new int[3];
+    private int[] RGBMaxBlue = new int[3];
+
+    private static final String    TAG = FaceDetectUtil.class.getName();
 
     /* HSV filter colors. Note these are derived empiracally from paint brush.
      RANGES:
@@ -209,7 +219,13 @@ public class FaceDetectUtil {
     }
 
     public Bitmap processContours( Mat monoImage, Mat originalImage ) {
-        //testConvexityDefects();
+        Log.d(TAG, "processContours - Begin ------------------------------" );
+        Bitmap retResult = null;
+
+        if( DISPLAY_EXTRA_LOGS){
+            showExtraLogs(originalImage );
+            showRGBColorRange( originalImage);
+        }
 
         List<MatOfPoint> contours = new ArrayList();
         Mat hierarchy = new Mat();
@@ -227,10 +243,10 @@ public class FaceDetectUtil {
                     detectedImage.rows(),Bitmap.Config.RGB_565);
 
             Utils.matToBitmap(detectedImage, bitMap);
-            return bitMap;
-        } else {
-            return null;
+            retResult = bitMap;
         }
+        Log.d(TAG, "processContours - End ------------------------------" );
+        return retResult;
     }
 
     private Mat processContour( MatOfPoint contour, Mat monoImage, Mat originalImage ){
@@ -371,7 +387,96 @@ public class FaceDetectUtil {
 
     }
 
+    private void showExtraLogs( Mat originalImage){
+        int x = originalImage.width()/2;
+        int y = originalImage.height()/2;
+        double[] RGBCenter = originalImage.get( x, y);
+        Log.d(TAG, "RGB of center: R=" + (int)RGBCenter[0] + " G=" + (int)RGBCenter[1] + " B=" + (int)RGBCenter[2]);
+        RGBCenter[0] = RGBCenter[1] = RGBCenter[2] = 0;
 
+//        Imgproc.rectangle(
+//                originalImage,
+//                new Point(x, y),
+//                new Point(x+2, y+2),
+//                new Scalar(0, 0, 255),
+//                1);
+
+    }
+
+    private void showRGBColorRange( Mat rgbImage ){
+        // Note that thermal image is 448 * 448 centered in a 640 * 480 rectangle. Skip the frame # at top left (24 rows)
+        int rowStart = 40;
+        int rowEnd = (480-448)/2  + 448 - (40-16);
+        boolean first = true;
+        while(rowStart < rowEnd ){
+            int colStart = (640-448)/2;
+            while( colStart < ((640-448)/2+448) ) {
+                try {
+                    double[] RGBvalue = rgbImage.get(rowStart, colStart);
+
+                    //Log.d(TAG, "RGB of at x=" + rowStart + " y=" + colStart + ": R=" + (int) RGBCenter[0] + " G=" + (int) RGBCenter[1] + " B=" + (int) RGBCenter[2]);
+                    if( first){
+                        first = false;
+                        RGBMaxRed[0] = (int)RGBvalue[0];
+                        RGBMaxRed[1] = (int)RGBvalue[1];
+                        RGBMaxRed[2] = (int)RGBvalue[2];
+
+                        RGBMinRed[0] = (int)RGBvalue[0];
+                        RGBMinRed[1] = (int)RGBvalue[1];
+                        RGBMinRed[2] = (int)RGBvalue[2];
+
+                        RGBMaxGreen[0] = (int)RGBvalue[0];
+                        RGBMaxGreen[1] = (int)RGBvalue[1];
+                        RGBMaxGreen[2] = (int)RGBvalue[2];
+
+                        RGBMinGreen[0] = (int)RGBvalue[0];
+                        RGBMinGreen[1] = (int)RGBvalue[1];
+                        RGBMinGreen[2] = (int)RGBvalue[2];
+
+                        RGBMaxBlue[0] = (int)RGBvalue[0];
+                        RGBMaxBlue[1] = (int)RGBvalue[1];
+                        RGBMaxBlue[2] = (int)RGBvalue[2];
+
+                        RGBMinBlue[0] = (int)RGBvalue[0];
+                        RGBMinBlue[1] = (int)RGBvalue[1];
+                        RGBMinBlue[2] = (int)RGBvalue[2];
+
+                    }else{
+                        updateMinMax( 0, RGBMinRed, RGBMaxRed, RGBvalue);
+                        updateMinMax( 1, RGBMinGreen, RGBMaxGreen, RGBvalue);
+                        updateMinMax( 2, RGBMinBlue, RGBMaxBlue, RGBvalue);
+
+                    }
+                    colStart++;
+                }catch(Exception ex ){
+                    Log.d(TAG, "foo");
+                }
+            }
+            rowStart++;
+        }
+        Log.d(TAG, "--RGB of Max Red: R=" + (int) RGBMaxRed[0] + " G=" + (int) RGBMaxRed[1] + " B=" + (int) RGBMaxRed[2]);
+        Log.d(TAG, "--RGB of Min Red: R=" + (int) RGBMinRed[0] + " G=" + (int) RGBMinRed[1] + " B=" + (int) RGBMinRed[2]);
+
+        Log.d(TAG, "--RGB of Max Green: R=" + (int) RGBMaxGreen[0] + " G=" + (int) RGBMaxGreen[1] + " B=" + (int) RGBMaxGreen[2]);
+        Log.d(TAG, "--RGB of Min Green: R=" + (int) RGBMinGreen[0] + " G=" + (int) RGBMinGreen[1] + " B=" + (int) RGBMinGreen[2]);
+
+        Log.d(TAG, "--RGB of Max Blue: R=" + (int) RGBMaxBlue[0] + " G=" + (int) RGBMaxBlue[1] + " B=" + (int) RGBMaxBlue[2]);
+        Log.d(TAG, "--RGB of Min Blue: R=" + (int) RGBMinBlue[0] + " G=" + (int) RGBMinBlue[1] + " B=" + (int) RGBMinBlue[2]);
+
+    }
+    private void updateMinMax( int idx, int[] min, int[] max, double[] val){
+        if( (int)val[idx] < min[idx] && (int)val[0] > 40){
+            min[0] = (int)val[0];
+            min[1] = (int)val[1];
+            min[2] = (int)val[2];
+        }
+        if( (int)val[idx] > max[idx]){
+            max[0] = (int)val[0];
+            max[1] = (int)val[1];
+            max[2] = (int)val[2];
+        }
+
+    }
 
     private Rect unionRect( Rect r1, Rect r2 ){
         int x, y, w, h;
