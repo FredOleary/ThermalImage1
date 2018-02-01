@@ -32,10 +32,10 @@ public class MainActivity extends AppCompatActivity {
     private FaceDetectUtil thermalUtil;
     private int nextIndex = 0;
 //    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.bb087);
-    private boolean showAll = true;
+    private boolean showAll = false;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s7_042, false )
+            new imageEntry( R.drawable.png_from_email, false )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(
@@ -85,7 +85,11 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.s6_014, true ),
             new imageEntry( R.drawable.s6_061, true ),
             new imageEntry( R.drawable.s7_042, false ),
-            new imageEntry( R.drawable.s13_011, false )
+            new imageEntry( R.drawable.s13_011, false ),
+            new imageEntry( R.drawable.s14_019, false ),
+            new imageEntry( R.drawable.s15_001, true ),
+            new imageEntry( R.drawable.s15_021, true ),
+            new imageEntry( R.drawable.s15_047, true )
             );
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
