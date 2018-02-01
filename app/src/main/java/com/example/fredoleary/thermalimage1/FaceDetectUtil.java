@@ -214,6 +214,7 @@ public class FaceDetectUtil {
         List<MatOfPoint> contours = new ArrayList();
         Mat hierarchy = new Mat();
         Imgproc.findContours(monoImage, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Log.d( TAG, "findContours returned " +  contours.size() + " contours");
         Mat detectedImage = null;
         for (MatOfPoint contour : contours) {
             Mat result = processContour(contour, monoImage, originalImage);
