@@ -191,14 +191,14 @@ public class FaceDetectUtil {
                     + " V=" + (int) RGBCenter[2] );
 
             getColorRange( hsvImage, false);
-            Log.d(TAG, "--HSV of Max Hue: H=" + (int) MaxRedHue[0] + " S=" + (int) MaxRedHue[1] + " V=" + (int) MaxRedHue[2]);
-            Log.d(TAG, "--HSV of Min Hue: H=" + (int) MinRedHue[0] + " S=" + (int) MinRedHue[1] + " V=" + (int) MinRedHue[2]);
+            Log.d(TAG, "--HSV of Max Hue: H=" + MaxRedHue[0] + " S=" + MaxRedHue[1] + " V=" + MaxRedHue[2]);
+            Log.d(TAG, "--HSV of Min Hue: H=" + MinRedHue[0] + " S=" + MinRedHue[1] + " V=" + MinRedHue[2]);
 
-            Log.d(TAG, "--HSV of Max Sat: H=" + (int) MaxGreenSat[0] + " S=" + (int) MaxGreenSat[1] + " V=" + (int) MaxGreenSat[2]);
-            Log.d(TAG, "--HSV of Min Sat: H=" + (int) MinGreenSat[0] + " S=" + (int) MinGreenSat[1] + " V=" + (int) MinGreenSat[2]);
+            Log.d(TAG, "--HSV of Max Sat: H=" + MaxGreenSat[0] + " S=" + MaxGreenSat[1] + " V=" + MaxGreenSat[2]);
+            Log.d(TAG, "--HSV of Min Sat: H=" + MinGreenSat[0] + " S=" + MinGreenSat[1] + " V=" + MinGreenSat[2]);
 
-            Log.d(TAG, "--HSV of Max Sat: H=" + (int) MaxBlueVal[0] + " S=" + (int) MaxBlueVal[1] + " V=" + (int) MaxBlueVal[2]);
-            Log.d(TAG, "--HSV of Min Sat: H=" + (int) MinBlueVal[0] + " S=" + (int) MinBlueVal[1] + " V=" + (int) MinBlueVal[2]);
+            Log.d(TAG, "--HSV of Max Sat: H=" + MaxBlueVal[0] + " S=" + MaxBlueVal[1] + " V=" + MaxBlueVal[2]);
+            Log.d(TAG, "--HSV of Min Sat: H=" + MinBlueVal[0] + " S=" +  MinBlueVal[1] + " V=" +  MinBlueVal[2]);
 
 
         }
