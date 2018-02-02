@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private FaceDetectUtil thermalUtil;
     private int nextIndex = 0;
 //    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.bb087);
-    private boolean showAll = false;
+    private boolean showAll = true;
 
     private List<imageEntry> oneImage = Arrays.asList(
             new imageEntry( R.drawable.s15_001, true )

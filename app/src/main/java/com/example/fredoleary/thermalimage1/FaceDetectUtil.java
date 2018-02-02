@@ -54,7 +54,7 @@ public class FaceDetectUtil {
     private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
     private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
-    private static boolean DISPLAY_EXTRA_LOGS = true;
+    private static boolean DISPLAY_EXTRA_LOGS = false;
     private int[] RGBMinRed = new int[3];
     private int[] RGBMaxRed = new int[3];
 
@@ -80,7 +80,7 @@ public class FaceDetectUtil {
 
         Note: Empirically a range of S/V values is required, E.g. 90-100 %
      */
-    private Scalar low_color = new Scalar(27.0/360*180, 90.0/100*255, 87.0/100*255);
+    private Scalar low_color = new Scalar(27.0/360*180, 80.0/100*255, 80.0/100*255);
     private  Scalar high_color = new Scalar(55.0/360*180, 100.0/100*255, 89.0/100*255);
 
     /*
@@ -449,7 +449,9 @@ public class FaceDetectUtil {
                     }
                     colStart++;
                 }catch(Exception ex ){
-                    Log.d(TAG, "foo");
+                    // This can happen if the image is irregular - just ignore it
+                    Log.d(TAG, "Exception: Ignoring image metrics");
+                    return;
                 }
             }
             rowStart++;
