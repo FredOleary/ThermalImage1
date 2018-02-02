@@ -35,11 +35,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = false;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s15_001, true )
+            new imageEntry( R.drawable.s11_114, false )
     );
 
     private List<imageEntry> imageEntries = Arrays.asList(
-
+            new imageEntry( R.drawable.long_finger, false ),
             new imageEntry( R.drawable.x001, true ),
             new imageEntry( R.drawable.x002, true ),
             new imageEntry( R.drawable.x003, true ),
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.x008, true ),
             new imageEntry( R.drawable.x009, true ),
             new imageEntry( R.drawable.x010, false ),
-            new imageEntry( R.drawable.x011, true ),
+            new imageEntry( R.drawable.x011, false ),
             new imageEntry( R.drawable.x012, false ),
             new imageEntry( R.drawable.x013, false ),
             new imageEntry( R.drawable.x014, true ),
@@ -147,14 +147,18 @@ public class MainActivity extends AppCompatActivity {
             if( imageDetected != null ){
                 if( img.result ) {
                     resultTextView.setText("Image detected - PASS (" + displayIndex+ ")");
+                    Log.d(TAG, "Processing image #" + displayIndex + " PASSED");
                 }else{
                     resultTextView.setText("Image detected - FAIL (" + displayIndex + ")");
+                    Log.d(TAG, "Processing image #" + displayIndex + " FAILED");
                 }
             }else{
                 if( img.result ) {
                     resultTextView.setText("No Image detected - FAIL (" + displayIndex + ")");
+                    Log.d(TAG, "Processing image #" + displayIndex + " FAILED");
                 }else{
                     resultTextView.setText("No Image detected - PASS (" + displayIndex+ ")");
+                    Log.d(TAG, "Processing image #" + displayIndex + " PASSED");
                 }
             }
         }else{
