@@ -54,15 +54,15 @@ public class FaceDetectUtil {
     private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
     private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
-    private static boolean DISPLAY_EXTRA_LOGS = false;
-    private int[] RGBMinRed = new int[3];
-    private int[] RGBMaxRed = new int[3];
+    private static boolean DISPLAY_EXTRA_LOGS = true;
+    private int[] MinRedHue = new int[3];
+    private int[] MaxRedHue = new int[3];
 
-    private int[] RGBMinGreen = new int[3];
-    private int[] RGBMaxGreen = new int[3];
+    private int[] MinGreenSat = new int[3];
+    private int[] MaxGreenSat = new int[3];
 
-    private int[] RGBMinBlue = new int[3];
-    private int[] RGBMaxBlue = new int[3];
+    private int[] MinBlueVal = new int[3];
+    private int[] MaxBlueVal = new int[3];
 
     private static final String    TAG = FaceDetectUtil.class.getName();
 
@@ -169,8 +169,41 @@ public class FaceDetectUtil {
         // Convert to HSV for filtering
 
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_RGB2HSV);
-        Mat mask = new Mat();
 
+        if( DISPLAY_EXTRA_LOGS) {
+            double[] RGBCenter =  getCenterColor(image, true );
+            Log.d(TAG, "RGB of center: R=" + (int)RGBCenter[0] + " G=" + (int)RGBCenter[1]
+                    + " B=" + (int)RGBCenter[2]  + " A=" + (int)RGBCenter[3]);
+
+            getColorRange( image, true);
+            Log.d(TAG, "--RGB of Max Red: R=" + (int) MaxRedHue[0] + " G=" + (int) MaxRedHue[1] + " B=" + (int) MaxRedHue[2]);
+            Log.d(TAG, "--RGB of Min Red: R=" + (int) MinRedHue[0] + " G=" + (int) MinRedHue[1] + " B=" + (int) MinRedHue[2]);
+
+            Log.d(TAG, "--RGB of Max Green: R=" + (int) MaxGreenSat[0] + " G=" + (int) MaxGreenSat[1] + " B=" + (int) MaxGreenSat[2]);
+            Log.d(TAG, "--RGB of Min Green: R=" + (int) MinGreenSat[0] + " G=" + (int) MinGreenSat[1] + " B=" + (int) MinGreenSat[2]);
+
+            Log.d(TAG, "--RGB of Max Blue: R=" + (int) MaxBlueVal[0] + " G=" + (int) MaxBlueVal[1] + " B=" + (int) MaxBlueVal[2]);
+            Log.d(TAG, "--RGB of Min Blue: R=" + (int) MinBlueVal[0] + " G=" + (int) MinBlueVal[1] + " B=" + (int) MinBlueVal[2]);
+
+
+            RGBCenter = getCenterColor(hsvImage, false);
+            Log.d(TAG, "HSV of center: H=" + (int) RGBCenter[0] + " S=" + (int) RGBCenter[1]
+                    + " V=" + (int) RGBCenter[2] );
+
+            getColorRange( hsvImage, false);
+            Log.d(TAG, "--HSV of Max Hue: H=" + (int) MaxRedHue[0] + " S=" + (int) MaxRedHue[1] + " V=" + (int) MaxRedHue[2]);
+            Log.d(TAG, "--HSV of Min Hue: H=" + (int) MinRedHue[0] + " S=" + (int) MinRedHue[1] + " V=" + (int) MinRedHue[2]);
+
+            Log.d(TAG, "--HSV of Max Sat: H=" + (int) MaxGreenSat[0] + " S=" + (int) MaxGreenSat[1] + " V=" + (int) MaxGreenSat[2]);
+            Log.d(TAG, "--HSV of Min Sat: H=" + (int) MinGreenSat[0] + " S=" + (int) MinGreenSat[1] + " V=" + (int) MinGreenSat[2]);
+
+            Log.d(TAG, "--HSV of Max Sat: H=" + (int) MaxBlueVal[0] + " S=" + (int) MaxBlueVal[1] + " V=" + (int) MaxBlueVal[2]);
+            Log.d(TAG, "--HSV of Min Sat: H=" + (int) MinBlueVal[0] + " S=" + (int) MinBlueVal[1] + " V=" + (int) MinBlueVal[2]);
+
+
+        }
+
+        Mat mask = new Mat();
         Core.inRange(hsvImage, low_color, high_color, mask);
 
         int morph_size = 5;
@@ -221,11 +254,6 @@ public class FaceDetectUtil {
     public Bitmap processContours( Mat monoImage, Mat originalImage ) {
         Log.d(TAG, "processContours - Begin ------------------------------" );
         Bitmap retResult = null;
-
-        if( DISPLAY_EXTRA_LOGS){
-            showExtraLogs(originalImage );
-            showRGBColorRange( originalImage);
-        }
 
         List<MatOfPoint> contours = new ArrayList();
         Mat hierarchy = new Mat();
@@ -387,13 +415,11 @@ public class FaceDetectUtil {
 
     }
 
-    private void showExtraLogs( Mat originalImage){
-        int x = originalImage.width()/2;
-        int y = originalImage.height()/2;
-        double[] RGBCenter = originalImage.get( x, y);
-        Log.d(TAG, "RGB of center: R=" + (int)RGBCenter[0] + " G=" + (int)RGBCenter[1] + " B=" + (int)RGBCenter[2]);
-        RGBCenter[0] = RGBCenter[1] = RGBCenter[2] = 0;
-
+    private double[] getCenterColor(Mat originalImage, boolean isRGB){
+        int col = originalImage.width()/2 + 20;     // Note - Offset 20 pix because of black rect in image center
+        int row = originalImage.height()/2 + 20;
+        double[] RGBCenter = originalImage.get( row, col);
+        return RGBCenter;
 //        Imgproc.rectangle(
 //                originalImage,
 //                new Point(x, y),
@@ -403,8 +429,9 @@ public class FaceDetectUtil {
 
     }
 
-    private void showRGBColorRange( Mat rgbImage ){
+    private void getColorRange(Mat rgbHsvImage, boolean isRGB ){
         // Note that thermal image is 448 * 448 centered in a 640 * 480 rectangle. Skip the frame # at top left (24 rows)
+        // Also there is a small black rect in the center of the screen, skip that
         int rowStart = 40;
         int rowEnd = (480-448)/2  + 448 - (40-16);
         boolean first = true;
@@ -412,39 +439,39 @@ public class FaceDetectUtil {
             int colStart = (640-448)/2;
             while( colStart < ((640-448)/2+448) ) {
                 try {
-                    double[] RGBvalue = rgbImage.get(rowStart, colStart);
+                    double[] RGBHSVvalue = rgbHsvImage.get(rowStart, colStart);
 
                     //Log.d(TAG, "RGB of at x=" + rowStart + " y=" + colStart + ": R=" + (int) RGBCenter[0] + " G=" + (int) RGBCenter[1] + " B=" + (int) RGBCenter[2]);
                     if( first){
                         first = false;
-                        RGBMaxRed[0] = (int)RGBvalue[0];
-                        RGBMaxRed[1] = (int)RGBvalue[1];
-                        RGBMaxRed[2] = (int)RGBvalue[2];
+                        MaxRedHue[0] = (int)RGBHSVvalue[0];
+                        MaxRedHue[1] = (int)RGBHSVvalue[1];
+                        MaxRedHue[2] = (int)RGBHSVvalue[2];
 
-                        RGBMinRed[0] = (int)RGBvalue[0];
-                        RGBMinRed[1] = (int)RGBvalue[1];
-                        RGBMinRed[2] = (int)RGBvalue[2];
+                        MinRedHue[0] = (int)RGBHSVvalue[0];
+                        MinRedHue[1] = (int)RGBHSVvalue[1];
+                        MinRedHue[2] = (int)RGBHSVvalue[2];
 
-                        RGBMaxGreen[0] = (int)RGBvalue[0];
-                        RGBMaxGreen[1] = (int)RGBvalue[1];
-                        RGBMaxGreen[2] = (int)RGBvalue[2];
+                        MaxGreenSat[0] = (int)RGBHSVvalue[0];
+                        MaxGreenSat[1] = (int)RGBHSVvalue[1];
+                        MaxGreenSat[2] = (int)RGBHSVvalue[2];
 
-                        RGBMinGreen[0] = (int)RGBvalue[0];
-                        RGBMinGreen[1] = (int)RGBvalue[1];
-                        RGBMinGreen[2] = (int)RGBvalue[2];
+                        MinGreenSat[0] = (int)RGBHSVvalue[0];
+                        MinGreenSat[1] = (int)RGBHSVvalue[1];
+                        MinGreenSat[2] = (int)RGBHSVvalue[2];
 
-                        RGBMaxBlue[0] = (int)RGBvalue[0];
-                        RGBMaxBlue[1] = (int)RGBvalue[1];
-                        RGBMaxBlue[2] = (int)RGBvalue[2];
+                        MaxBlueVal[0] = (int)RGBHSVvalue[0];
+                        MaxBlueVal[1] = (int)RGBHSVvalue[1];
+                        MaxBlueVal[2] = (int)RGBHSVvalue[2];
 
-                        RGBMinBlue[0] = (int)RGBvalue[0];
-                        RGBMinBlue[1] = (int)RGBvalue[1];
-                        RGBMinBlue[2] = (int)RGBvalue[2];
+                        MinBlueVal[0] = (int)RGBHSVvalue[0];
+                        MinBlueVal[1] = (int)RGBHSVvalue[1];
+                        MinBlueVal[2] = (int)RGBHSVvalue[2];
 
                     }else{
-                        updateMinMax( 0, RGBMinRed, RGBMaxRed, RGBvalue);
-                        updateMinMax( 1, RGBMinGreen, RGBMaxGreen, RGBvalue);
-                        updateMinMax( 2, RGBMinBlue, RGBMaxBlue, RGBvalue);
+                        updateMinMax( 0, MinRedHue, MaxRedHue, RGBHSVvalue, isRGB);
+                        updateMinMax( 1, MinGreenSat, MaxGreenSat, RGBHSVvalue, isRGB);
+                        updateMinMax( 2, MinBlueVal, MaxBlueVal, RGBHSVvalue, isRGB);
 
                     }
                     colStart++;
@@ -456,18 +483,16 @@ public class FaceDetectUtil {
             }
             rowStart++;
         }
-        Log.d(TAG, "--RGB of Max Red: R=" + (int) RGBMaxRed[0] + " G=" + (int) RGBMaxRed[1] + " B=" + (int) RGBMaxRed[2]);
-        Log.d(TAG, "--RGB of Min Red: R=" + (int) RGBMinRed[0] + " G=" + (int) RGBMinRed[1] + " B=" + (int) RGBMinRed[2]);
-
-        Log.d(TAG, "--RGB of Max Green: R=" + (int) RGBMaxGreen[0] + " G=" + (int) RGBMaxGreen[1] + " B=" + (int) RGBMaxGreen[2]);
-        Log.d(TAG, "--RGB of Min Green: R=" + (int) RGBMinGreen[0] + " G=" + (int) RGBMinGreen[1] + " B=" + (int) RGBMinGreen[2]);
-
-        Log.d(TAG, "--RGB of Max Blue: R=" + (int) RGBMaxBlue[0] + " G=" + (int) RGBMaxBlue[1] + " B=" + (int) RGBMaxBlue[2]);
-        Log.d(TAG, "--RGB of Min Blue: R=" + (int) RGBMinBlue[0] + " G=" + (int) RGBMinBlue[1] + " B=" + (int) RGBMinBlue[2]);
 
     }
-    private void updateMinMax( int idx, int[] min, int[] max, double[] val){
-        if( (int)val[idx] < min[idx] && (int)val[0] > 40){
+    private void updateMinMax( int idx, int[] min, int[] max, double[] val, boolean isRGB){
+        // Note there is a small black rect at screen center, ignore it
+        if( isRGB ){
+            if( (int)val[0] < 20) return;   // TOO little red
+        }else{
+            if( (int)val[2] < 20) return;   // Too little brightness
+        }
+        if( (int)val[idx] < min[idx] ){
             min[0] = (int)val[0];
             min[1] = (int)val[1];
             min[2] = (int)val[2];
