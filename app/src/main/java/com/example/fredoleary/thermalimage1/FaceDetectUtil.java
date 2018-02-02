@@ -97,7 +97,7 @@ public class FaceDetectUtil {
     Width/Height ratio. Must be < maxWidthPct and > minWidthPct
      */
     private static final int maxWidthPct =100;
-    private static final int minWidthPct =30;
+    private static final int minWidthPct =50;
 
     /*
     Image width cannoy exceed maxScreenPct of the screen width
