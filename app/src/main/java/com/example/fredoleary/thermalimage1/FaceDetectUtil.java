@@ -65,6 +65,7 @@ public class FaceDetectUtil {
     private int[] MaxBlueVal = new int[3];
 
     private static final String    TAG = FaceDetectUtil.class.getName();
+    private static boolean DEBUG = true;
 
     /* HSV filter colors. Note these are derived empiracally from paint brush.
      RANGES:
@@ -114,7 +115,7 @@ public class FaceDetectUtil {
 //            Mat monoImageInv = new Mat();
 //            Core.bitwise_not ( monoChromeImage, monoImageInv );
         Bitmap detectedImage = processContours(contourImage, originalImage);
-        Log.d(TAG, "detectFaces detected=" + (detectedImage != null ? true : false));
+        if (DEBUG) Log.d(TAG, "detectFaces detected=" + (detectedImage != null ? true : false));
         return detectedImage;
     }
 
@@ -172,33 +173,33 @@ public class FaceDetectUtil {
 
         if( DISPLAY_EXTRA_LOGS) {
             double[] RGBCenter =  getCenterColor(image, true );
-            Log.d(TAG, "RGB of center: R=" + (int)RGBCenter[0] + " G=" + (int)RGBCenter[1]
+            if (DEBUG) Log.d(TAG, "RGB of center: R=" + (int)RGBCenter[0] + " G=" + (int)RGBCenter[1]
                     + " B=" + (int)RGBCenter[2]  + " A=" + (int)RGBCenter[3]);
 
             getColorRange( image, true);
-            Log.d(TAG, "--RGB of Max Red: R=" + (int) MaxRedHue[0] + " G=" + (int) MaxRedHue[1] + " B=" + (int) MaxRedHue[2]);
-            Log.d(TAG, "--RGB of Min Red: R=" + (int) MinRedHue[0] + " G=" + (int) MinRedHue[1] + " B=" + (int) MinRedHue[2]);
+            if (DEBUG) Log.d(TAG, "--RGB of Max Red: R=" + (int) MaxRedHue[0] + " G=" + (int) MaxRedHue[1] + " B=" + (int) MaxRedHue[2]);
+            if (DEBUG) Log.d(TAG, "--RGB of Min Red: R=" + (int) MinRedHue[0] + " G=" + (int) MinRedHue[1] + " B=" + (int) MinRedHue[2]);
 
-            Log.d(TAG, "--RGB of Max Green: R=" + (int) MaxGreenSat[0] + " G=" + (int) MaxGreenSat[1] + " B=" + (int) MaxGreenSat[2]);
-            Log.d(TAG, "--RGB of Min Green: R=" + (int) MinGreenSat[0] + " G=" + (int) MinGreenSat[1] + " B=" + (int) MinGreenSat[2]);
+            if (DEBUG) Log.d(TAG, "--RGB of Max Green: R=" + (int) MaxGreenSat[0] + " G=" + (int) MaxGreenSat[1] + " B=" + (int) MaxGreenSat[2]);
+            if (DEBUG) Log.d(TAG, "--RGB of Min Green: R=" + (int) MinGreenSat[0] + " G=" + (int) MinGreenSat[1] + " B=" + (int) MinGreenSat[2]);
 
-            Log.d(TAG, "--RGB of Max Blue: R=" + (int) MaxBlueVal[0] + " G=" + (int) MaxBlueVal[1] + " B=" + (int) MaxBlueVal[2]);
-            Log.d(TAG, "--RGB of Min Blue: R=" + (int) MinBlueVal[0] + " G=" + (int) MinBlueVal[1] + " B=" + (int) MinBlueVal[2]);
+            if (DEBUG) Log.d(TAG, "--RGB of Max Blue: R=" + (int) MaxBlueVal[0] + " G=" + (int) MaxBlueVal[1] + " B=" + (int) MaxBlueVal[2]);
+            if (DEBUG) Log.d(TAG, "--RGB of Min Blue: R=" + (int) MinBlueVal[0] + " G=" + (int) MinBlueVal[1] + " B=" + (int) MinBlueVal[2]);
 
 
             RGBCenter = getCenterColor(hsvImage, false);
-            Log.d(TAG, "HSV of center: H=" + (int) RGBCenter[0] + " S=" + (int) RGBCenter[1]
+            if (DEBUG) Log.d(TAG, "HSV of center: H=" + (int) RGBCenter[0] + " S=" + (int) RGBCenter[1]
                     + " V=" + (int) RGBCenter[2] );
 
             getColorRange( hsvImage, false);
-            Log.d(TAG, "--HSV of Max Hue: H=" + MaxRedHue[0] + " S=" + MaxRedHue[1] + " V=" + MaxRedHue[2]);
-            Log.d(TAG, "--HSV of Min Hue: H=" + MinRedHue[0] + " S=" + MinRedHue[1] + " V=" + MinRedHue[2]);
+            if (DEBUG) Log.d(TAG, "--HSV of Max Hue: H=" + MaxRedHue[0] + " S=" + MaxRedHue[1] + " V=" + MaxRedHue[2]);
+            if (DEBUG) Log.d(TAG, "--HSV of Min Hue: H=" + MinRedHue[0] + " S=" + MinRedHue[1] + " V=" + MinRedHue[2]);
 
-            Log.d(TAG, "--HSV of Max Sat: H=" + MaxGreenSat[0] + " S=" + MaxGreenSat[1] + " V=" + MaxGreenSat[2]);
-            Log.d(TAG, "--HSV of Min Sat: H=" + MinGreenSat[0] + " S=" + MinGreenSat[1] + " V=" + MinGreenSat[2]);
+            if (DEBUG) Log.d(TAG, "--HSV of Max Sat: H=" + MaxGreenSat[0] + " S=" + MaxGreenSat[1] + " V=" + MaxGreenSat[2]);
+            if (DEBUG) Log.d(TAG, "--HSV of Min Sat: H=" + MinGreenSat[0] + " S=" + MinGreenSat[1] + " V=" + MinGreenSat[2]);
 
-            Log.d(TAG, "--HSV of Max Sat: H=" + MaxBlueVal[0] + " S=" + MaxBlueVal[1] + " V=" + MaxBlueVal[2]);
-            Log.d(TAG, "--HSV of Min Sat: H=" + MinBlueVal[0] + " S=" +  MinBlueVal[1] + " V=" +  MinBlueVal[2]);
+            if (DEBUG) Log.d(TAG, "--HSV of Max Sat: H=" + MaxBlueVal[0] + " S=" + MaxBlueVal[1] + " V=" + MaxBlueVal[2]);
+            if (DEBUG) Log.d(TAG, "--HSV of Min Sat: H=" + MinBlueVal[0] + " S=" +  MinBlueVal[1] + " V=" +  MinBlueVal[2]);
 
 
         }
@@ -244,7 +245,7 @@ public class FaceDetectUtil {
             blobDetector.detect(monoImage, matOfKeyPoints);
 
             Features2d.drawKeypoints(monoImage, matOfKeyPoints, originalImage, new Scalar(0, 0, 255), DRAW_OVER_OUTIMG);
-            Log.d(TAG, "foo");
+            if (DEBUG) Log.d(TAG, "foo");
         }catch (IOException ex ){
             ex.printStackTrace();
         }
@@ -252,13 +253,13 @@ public class FaceDetectUtil {
     }
 
     public Bitmap processContours( Mat monoImage, Mat originalImage ) {
-        Log.d(TAG, "processContours - Begin ------------------------------" );
+        if (DEBUG) Log.d(TAG, "processContours - Begin ------------------------------" );
         Bitmap retResult = null;
 
         List<MatOfPoint> contours = new ArrayList();
         Mat hierarchy = new Mat();
         Imgproc.findContours(monoImage, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        Log.d( TAG, "findContours returned " +  contours.size() + " contours");
+        if (DEBUG) Log.d( TAG, "findContours returned " +  contours.size() + " contours");
         Mat detectedImage = null;
         for (MatOfPoint contour : contours) {
             Mat result = processContour(contour, monoImage, originalImage);
@@ -273,7 +274,7 @@ public class FaceDetectUtil {
             Utils.matToBitmap(detectedImage, bitMap);
             retResult = bitMap;
         }
-        Log.d(TAG, "processContours - End ------------------------------" );
+        if (DEBUG) Log.d(TAG, "processContours - End ------------------------------" );
         return retResult;
     }
 
@@ -290,7 +291,7 @@ public class FaceDetectUtil {
         }
         int rectAreaPct = (int)(boundingRect.area()/(double)imageSize * 100);
         if( rectAreaPct >  minRectSizePct &&  rectAreaPct < maxRectSizePct) {
-            Log.d(TAG, "Rectangle included. Area%: " + rectAreaPct);
+            if (DEBUG) Log.d(TAG, "Rectangle included. Area%: " + rectAreaPct);
 
             // approximates a polygonal curve with the specified precision
             MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
@@ -300,7 +301,7 @@ public class FaceDetectUtil {
 
             // Require at least 5 vertices... (empirical)
             if( numberVertices > 5){
-                Log.d(TAG, "Shape included. numberVertices: " + numberVertices);
+                if (DEBUG) Log.d(TAG, "Shape included. numberVertices: " + numberVertices);
 
                 MatOfPoint approxCurveInt = new MatOfPoint(approxCurve.toArray());
                 if( DISPLAY_APPROX_CONTOURS ) {
@@ -320,12 +321,12 @@ public class FaceDetectUtil {
                 double polyArea = Imgproc.contourArea( approxCurveInt);
                 int areaRatioPct = (int)(polyArea/hullArea *100);
 
-//                Log.d(TAG, "hullArea: " + hullArea +
+//                if (DEBUG) Log.d(TAG, "hullArea: " + hullArea +
 //                        ". polyArea " + polyArea +
 //                        ". areaRatioPct: " + areaRatioPct);
 
                 if( areaRatioPct > 85 ){
-                    Log.d(TAG, "Shape MATCH: areaRatioPct " + areaRatioPct );
+                    if (DEBUG) Log.d(TAG, "Shape MATCH: areaRatioPct " + areaRatioPct );
 
                     // Checking that width fits withing screen. (Too wide is rejected)
                     int screenWidth = monoImage.width();
@@ -336,12 +337,12 @@ public class FaceDetectUtil {
                     int screenPct = (int)((double)boundingRect.width/(double)screenWidth*100);
 
                     if(screenPct < maxScreenPct ) {
-                        Log.d(TAG, "Image width OK: maxScreenPct " + screenPct);
+                        if (DEBUG) Log.d(TAG, "Image width OK: maxScreenPct " + screenPct);
 
                         // Checking ratio of width to height
                         int widthPct = (int) ((double) boundingRect.width / (double) boundingRect.height * 100);
                         if (widthPct <= maxWidthPct && widthPct >= minWidthPct) {
-                            Log.d(TAG, "Width/Height MATCH: widthPct " + widthPct);
+                            if (DEBUG) Log.d(TAG, "Width/Height MATCH: widthPct " + widthPct);
                             faceDetected = true;
                             if (DISPLAY_CONTOUR_RECTS) {
                                 Imgproc.rectangle(
@@ -352,14 +353,14 @@ public class FaceDetectUtil {
                                         2);
                             }
                         } else {
-                            Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct);
+                            if (DEBUG) Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct);
                         }
                     }else{
-                        Log.d(TAG, "Image too WIDE: maxScreenPct " + screenPct);
+                        if (DEBUG) Log.d(TAG, "Image too WIDE: maxScreenPct " + screenPct);
                     }
 
                 }else{
-                    Log.d(TAG, "Shape MISMATCH: areaRatioPct " + areaRatioPct );
+                    if (DEBUG) Log.d(TAG, "Shape MISMATCH: areaRatioPct " + areaRatioPct );
                 }
                 return faceDetected ? originalImage : null;
 
@@ -374,11 +375,11 @@ public class FaceDetectUtil {
 //                    // For details on the format, (ugly) of results of convexityDefects
 //                    for (int idx = 3; idx < defects.length; idx += 4) {
 //                        double distance = (double) defects[idx] / 256;
-//                        Log.d(TAG, "Distance: " + distance);
+//                        if (DEBUG) Log.d(TAG, "Distance: " + distance);
 //                        acculatedDistance += distance;
 //                    }
 //                    double defectPct = acculatedDistance/boundingRect.area() *100;
-//                    Log.d(TAG, "acculatedDistance: " + acculatedDistance +
+//                    if (DEBUG) Log.d(TAG, "acculatedDistance: " + acculatedDistance +
 //                             ". boundingRect.width " + boundingRect.width +
 //                             ". boundingRect.height " + boundingRect.height +
 //                             ". defectPct: " + defectPct);
@@ -399,11 +400,11 @@ public class FaceDetectUtil {
 //                }
 
             }else{
-                Log.d(TAG, "Contour excluded. Too few numberVertices: " + numberVertices);
+                if (DEBUG) Log.d(TAG, "Contour excluded. Too few numberVertices: " + numberVertices);
             }
 
         }else{
-            Log.d(TAG, "Rectangle excluded. Area too small/large, Area%: " + rectAreaPct);
+            if (DEBUG) Log.d(TAG, "Rectangle excluded. Area too small/large, Area%: " + rectAreaPct);
         }
         return null;
     }
@@ -441,7 +442,7 @@ public class FaceDetectUtil {
                 try {
                     double[] RGBHSVvalue = rgbHsvImage.get(rowStart, colStart);
 
-                    //Log.d(TAG, "RGB of at x=" + rowStart + " y=" + colStart + ": R=" + (int) RGBCenter[0] + " G=" + (int) RGBCenter[1] + " B=" + (int) RGBCenter[2]);
+                    //if (DEBUG) Log.d(TAG, "RGB of at x=" + rowStart + " y=" + colStart + ": R=" + (int) RGBCenter[0] + " G=" + (int) RGBCenter[1] + " B=" + (int) RGBCenter[2]);
                     if( first){
                         first = false;
                         MaxRedHue[0] = (int)RGBHSVvalue[0];
@@ -477,7 +478,7 @@ public class FaceDetectUtil {
                     colStart++;
                 }catch(Exception ex ){
                     // This can happen if the image is irregular - just ignore it
-                    Log.d(TAG, "Exception: Ignoring image metrics");
+                    if (DEBUG) Log.d(TAG, "Exception: Ignoring image metrics");
                     return;
                 }
             }
@@ -568,6 +569,6 @@ public class FaceDetectUtil {
 
         MatOfInt4 convexityDefects = new MatOfInt4();
         Imgproc.convexityDefects(points, hull, convexityDefects);
-        Log.d(TAG, "Whoo-hoo");
+        if (DEBUG) Log.d(TAG, "Whoo-hoo");
      }
 }
