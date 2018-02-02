@@ -123,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void processImageEx( imageEntry img ){
+        int indexFrom1 = nextIndex +1;
+        Log.d(TAG, "Processing image #" + indexFrom1);
         processImage( img );
         nextIndex++;
         processNextImage();

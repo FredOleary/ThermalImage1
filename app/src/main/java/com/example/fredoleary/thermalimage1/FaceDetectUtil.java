@@ -54,7 +54,7 @@ public class FaceDetectUtil {
     private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
     private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
-    private static boolean DISPLAY_EXTRA_LOGS = true;
+    private static boolean DISPLAY_EXTRA_LOGS = false;
     private int[] MinRedHue = new int[3];
     private int[] MaxRedHue = new int[3];
 
@@ -68,7 +68,7 @@ public class FaceDetectUtil {
 
     /* HSV filter colors. Note these are derived empiracally from paint brush.
      RANGES:
-        Paintbrush uses 0-360 range for Hue (H), openCV uses 0-180 range
+        Paintbrush uses 0-359 range for Hue (H), openCV uses 0-179 range
         Paintbrush uses 0-100 range for Saturation/Value (H/V), openCV uses 0-255 range
 
         From Temperature to Color convertor
@@ -80,8 +80,8 @@ public class FaceDetectUtil {
 
         Note: Empirically a range of S/V values is required, E.g. 90-100 %
      */
-    private Scalar low_color = new Scalar(27.0/360*180, 80.0/100*255, 80.0/100*255);
-    private  Scalar high_color = new Scalar(55.0/360*180, 100.0/100*255, 89.0/100*255);
+    private Scalar low_color = new Scalar(27.0/359*179, 80.0/100*255, 70.0/100*255);
+    private  Scalar high_color = new Scalar(55.0/359*179, 100.0/100*255, 90.0/100*255);
 
     /*
     Minimum size.. (Empirical) - Detected object must be larger than this size. E.g. 10% of the image size
