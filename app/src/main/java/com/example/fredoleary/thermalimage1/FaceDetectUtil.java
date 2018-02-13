@@ -105,6 +105,11 @@ public class FaceDetectUtil {
      */
     private static final int maxScreenPct = 90;
 
+    /*
+        detected rectangles around face objects
+     */
+    private List<Rect> mDetectedRectangles = new ArrayList<>();
+
     public Bitmap detectFaces(Bitmap bitmap) {
         Mat originalImage = new Mat();
         Utils.bitmapToMat(bitmap, originalImage);
@@ -117,6 +122,10 @@ public class FaceDetectUtil {
         Bitmap detectedImage = processContours(contourImage, originalImage);
         if (DEBUG) Log.d(TAG, "detectFaces detected=" + (detectedImage != null ? true : false));
         return detectedImage;
+    }
+
+    public List<Rect> getDetectedRectangles() {
+        return mDetectedRectangles;
     }
 
     public Mat getImage(Context context, int resourceId ){
@@ -352,6 +361,8 @@ public class FaceDetectUtil {
                                         new Scalar(0, 0, 255),
                                         2);
                             }
+                            // add rect to detected list
+                            mDetectedRectangles.add(boundingRect);
                         } else {
                             if (DEBUG) Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct);
                         }
