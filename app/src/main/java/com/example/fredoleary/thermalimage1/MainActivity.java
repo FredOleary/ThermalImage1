@@ -12,11 +12,25 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+
 public class MainActivity extends AppCompatActivity {
+
+    private static boolean DISPLAY_CONTOURS =  FALSE;            // Displays the contour lines in red
+    private static boolean DISPLAY_CONTOUR_RECTS =  TRUE;      // Displays the contour covering rectangle in blue
+    private static boolean DISPLAY_COVER_RECT =  FALSE;         // Displays the union of all contour covering rectangles in blue
+    private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
+    private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
+
     class imageEntry {
         public imageEntry(Integer resId, boolean result){
             this.resId = resId;
@@ -35,8 +49,44 @@ public class MainActivity extends AppCompatActivity {
     private boolean showAll = false;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s11_114, false )
+            new imageEntry( R.drawable.s2_009, true )
     );
+
+    /*
+    Mock data for 32*32 values degree C * 10
+     */
+    private int[][] thermalTest =   {{ 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,000,000,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,000,000,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+            { 350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350,350},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200},
+                                     { 200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200}};
 
     private List<imageEntry> imageEntries = Arrays.asList(
             new imageEntry( R.drawable.long_finger, false ),
@@ -75,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.s12_005, false ),
 
             new imageEntry( R.drawable.s1_003, false ),
-            new imageEntry( R.drawable.s1_008, false ),
+//            new imageEntry( R.drawable.s1_008, false ),
             new imageEntry( R.drawable.s2_009, false ),
             new imageEntry( R.drawable.s3_004, false ),
             new imageEntry( R.drawable.s4_053, false ),
@@ -130,21 +180,29 @@ public class MainActivity extends AppCompatActivity {
         processNextImage();
     }
     private void processImage( imageEntry img){
-        Bitmap imageDetected = null;
         thermalUtil = new FaceDetectUtil();
         originalImage = thermalUtil.getImage( this, img.resId);
+        int[][] thermalMap = thermalUtil.getTemperatures(originalImage);
         if(originalImage != null){
-            Mat[] maskAndContours = thermalUtil.getMonoChromeImage( originalImage );
+            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( originalImage, thermalMap );
             monoChromeImage = maskAndContours[0];
             contourImage = maskAndContours[1];
-//            detected = thermalUtil.processBlob( this, monoChromeImage, originalImage);
 //            Mat monoImageInv = new Mat();
 //            Core.bitwise_not ( monoChromeImage, monoImageInv );
-            imageDetected = thermalUtil.processContours( contourImage, originalImage);
+            List<FaceDetectUtil.DetectResult> results = thermalUtil.processContours( contourImage, originalImage);
+            // Draw results on originalImage
+            drawResults( thermalUtil, originalImage, results );
             thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
             TextView resultTextView = (TextView)findViewById(R.id.imageDetect);
             int displayIndex = nextIndex + 1;
-            if( imageDetected != null ){
+            boolean faceDetected = false;
+            for( FaceDetectUtil.DetectResult result :results ){
+                if( result.isFace){
+                    faceDetected = true;
+                    break;
+                }
+            }
+            if( faceDetected ){
                 if( img.result ) {
                     resultTextView.setText("Image detected - PASS (" + displayIndex+ ")");
                     Log.d(TAG, "Processing image #" + displayIndex + " PASSED");
@@ -168,7 +226,32 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+    /*
+        Draw various image detection elements. (Note - covering rect is drawn only if a face is detected
+    */
 
+    private void drawResults(FaceDetectUtil util, Mat originalImage, List<FaceDetectUtil.DetectResult> results){
+        for(FaceDetectUtil.DetectResult result : results){
+            if( DISPLAY_APPROX_CONTOURS  && result.approxContour != null) {
+                util.displayPoly( originalImage, result.approxContour, new Scalar(30, 255, 255) );     // white
+            }
+            if (DISPLAY_CONTOUR_RECTS && result.isFace && result.rect != null) {
+                MatOfPoint rect = new MatOfPoint();
+                Point[] rectPts = new Point[5];
+                rectPts[0] = new Point( result.rect.x, result.rect.y);
+                rectPts[1] = new Point( result.rect.x, result.rect.y + result.rect.height);
+                rectPts[2] = new Point( result.rect.x + result.rect.width, result.rect.y + result.rect.height);
+                rectPts[3] = new Point( result.rect.x + result.rect.width, result.rect.y);
+                rectPts[4] = new Point( result.rect.x, result.rect.y);
+
+
+                rect.fromArray( rectPts);
+                util.displayPoly( originalImage, rect, new Scalar(0, 0, 255) );
+            }
+
+        }
+
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

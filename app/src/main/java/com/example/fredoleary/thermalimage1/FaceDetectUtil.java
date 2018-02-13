@@ -9,18 +9,16 @@ import android.widget.ImageView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfInt4;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.BufferedReader;
@@ -35,8 +33,6 @@ import java.util.List;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-import static org.opencv.features2d.FeatureDetector.FAST;
-import static org.opencv.features2d.Features2d.DRAW_OVER_OUTIMG;
 import static org.opencv.imgproc.Imgproc.MORPH_DILATE;
 
 
@@ -45,14 +41,18 @@ import static org.opencv.imgproc.Imgproc.MORPH_DILATE;
  */
 
 public class FaceDetectUtil {
+    class DetectResult {
+        // In order of granularity... (most-least) contour->approxContour->hull->rect
+        public boolean isFace;                  // True if the contour could be a face
+        public Rect rect;                       // Rectangle that completely covers the contour. Least granular
+        public MatOfPoint contour;              // The contour. (Most granular)
+        public MatOfPoint approxContour;        // Approximate contour
+        public MatOfPoint hull;                 // Polygon cover
+
+    }
     /*
     Flags for various processing
      */
-    private static boolean DISPLAY_CONTOURS =  FALSE;            // Displays the contour lines in red
-    private static boolean DISPLAY_CONTOUR_RECTS =  TRUE;      // Displays the contour covering rectangle in blue
-    private static boolean DISPLAY_COVER_RECT =  FALSE;         // Displays the union of all contour covering rectangles in blue
-    private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
-    private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
     private static boolean DISPLAY_EXTRA_LOGS = false;
     private int[] MinRedHue = new int[3];
@@ -66,6 +66,14 @@ public class FaceDetectUtil {
 
     private static final String    TAG = FaceDetectUtil.class.getName();
     private static boolean DEBUG = true;
+
+    private  static final int MaxThermalRows = 32;
+    private  static final int MaxThermalCols = 32;
+
+    private  static final int MatBuffer = 10;
+
+    private  static final int MaxSkinInCBy10 = 400;     // Max temp, degrees C by 10
+    private  static final int MinSkinInCBy10 = 320;     // Min temp, degrees C by 10
 
     /* HSV filter colors. Note these are derived empiracally from paint brush.
      RANGES:
@@ -114,9 +122,10 @@ public class FaceDetectUtil {
 //            detected = processBlob( this, monoChromeImage, originalImage);
 //            Mat monoImageInv = new Mat();
 //            Core.bitwise_not ( monoChromeImage, monoImageInv );
-        Bitmap detectedImage = processContours(contourImage, originalImage);
-        if (DEBUG) Log.d(TAG, "detectFaces detected=" + (detectedImage != null ? true : false));
-        return detectedImage;
+        List<DetectResult> results = processContours(contourImage, originalImage);
+        // TODO - Draw objects on originalImage ???
+        //if (DEBUG) Log.d(TAG, "detectFaces detected=" + (detectedImage != null ? true : false));
+        return null;
     }
 
     public Mat getImage(Context context, int resourceId ){
@@ -225,70 +234,86 @@ public class FaceDetectUtil {
 
     }
 
-    public boolean processBlob( Context context, Mat monoImage, Mat originalImage ) {
-        MatOfKeyPoint matOfKeyPoints = new MatOfKeyPoint();
+    /*
+    getMonoChromeImageEx. Produce a monochome image from a 32*32 array of integers where each
+    Integer is degrees C * 10. E.g. 32.3 is 323
+     */
+    public Mat[] getMonoChromeImageEx(Mat originalImage, int[][] thermalData ){
+        Mat[] results= new Mat[2];
+        Mat monSource = new Mat(MaxThermalRows + (MatBuffer*2),MaxThermalCols +(MatBuffer*2), CvType.CV_8U);
+        initializeFromCentigrade(monSource, thermalData );
+        results[0] = monSource;
 
-        FeatureDetector blobDetector = FeatureDetector.create(FAST);
-        File file = context.getFilesDir();
-        String path = file.getPath();
-        Mat monoImageInv = new Mat();
-        try {
+        int morph_size = 1;
+        Mat element = Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( morph_size + 1, morph_size+1 ), new Point( morph_size, morph_size ) );
 
-            path += "/Fred_test";
-            blobDetector.write(path);
+        Mat morphedMask = new Mat(); // result matrix
 
-            String config = getFileContents(new File(path));
-            blobDetector.read(path);
+        Point kernel = new Point(-1,-1);
+        Imgproc.morphologyEx( monSource, morphedMask, MORPH_DILATE, element, kernel, 3);
 
-            Core.bitwise_not ( monoImage, monoImageInv );
+        results[0] = morphedMask;
 
-            blobDetector.detect(monoImage, matOfKeyPoints);
-
-            Features2d.drawKeypoints(monoImage, matOfKeyPoints, originalImage, new Scalar(0, 0, 255), DRAW_OVER_OUTIMG);
-            if (DEBUG) Log.d(TAG, "foo");
-        }catch (IOException ex ){
-            ex.printStackTrace();
+        // Use Canny to create the contours on the monochrome image
+        Mat contourImage = new Mat();
+        Imgproc.Canny(morphedMask, contourImage, 0, 40);
+        results[1] = contourImage;
+        return results;
+    }
+    /*
+    Create 32 *32 Mat with white pixels for 'hot' regions.
+     */
+    private void initializeFromCentigrade( Mat destMat, int[][] thermalData){
+        byte[] buffer = new byte[destMat.height()* destMat.width()];
+        destMat.put(0,0, buffer);
+        for( int rowIndex = 0; rowIndex < MaxThermalRows; rowIndex++ ){
+            for( int colIndex = 0; colIndex < MaxThermalRows; colIndex++ ){
+                if( thermalData[rowIndex][colIndex] >= MinSkinInCBy10 &&  thermalData[rowIndex][colIndex] <= MaxSkinInCBy10 ){
+                    destMat.put(rowIndex+MatBuffer,colIndex+MatBuffer, 0xff );
+                }
+            }
         }
-        return false;
     }
 
-    public Bitmap processContours( Mat monoImage, Mat originalImage ) {
+
+    public List<DetectResult> processContours( Mat monoImage, Mat originalImage ) {
         if (DEBUG) Log.d(TAG, "processContours - Begin ------------------------------" );
-        Bitmap retResult = null;
+        List<DetectResult> results = new ArrayList<>();
 
         List<MatOfPoint> contours = new ArrayList();
         Mat hierarchy = new Mat();
         Imgproc.findContours(monoImage, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         if (DEBUG) Log.d( TAG, "findContours returned " +  contours.size() + " contours");
-        Mat detectedImage = null;
         for (MatOfPoint contour : contours) {
-            Mat result = processContour(contour, monoImage, originalImage);
+            DetectResult result = processContour(contour, monoImage, originalImage);
             if(result != null ){
-                detectedImage = result;
+                results.add( result);
             }
         }
-        if (detectedImage != null) {
-            Bitmap bitMap = Bitmap.createBitmap(detectedImage.cols(),
-                    detectedImage.rows(),Bitmap.Config.RGB_565);
-
-            Utils.matToBitmap(detectedImage, bitMap);
-            retResult = bitMap;
-        }
+//        if (detectedImage != null) {
+//            Bitmap bitMap = Bitmap.createBitmap(detectedImage.cols(),
+//                    detectedImage.rows(),Bitmap.Config.RGB_565);
+//
+//            Utils.matToBitmap(detectedImage, bitMap);
+//            retResult = bitMap;
+//        }
         if (DEBUG) Log.d(TAG, "processContours - End ------------------------------" );
-        return retResult;
+        return results;
     }
 
-    private Mat processContour( MatOfPoint contour, Mat monoImage, Mat originalImage ){
-        boolean faceDetected = false;
+    private DetectResult processContour( MatOfPoint contour, Mat monoImage, Mat originalImage ){
+        DetectResult result = new DetectResult();
+        result.isFace = false;
 
         Rect boundingRect = Imgproc.boundingRect(contour);
+        result.rect = boundingRect;
         int imageSize = monoImage.width() * monoImage.height();
 
         // Check if the contour is large enough
 
-        if( DISPLAY_CONTOURS ) {
-            displayPoly( originalImage, monoImage, contour, new Scalar(255, 0, 0) );     // Red
-        }
+//        if( DISPLAY_CONTOURS ) {
+//            displayPoly( originalImage, monoImage, contour, new Scalar(255, 0, 0) );     // Red
+//        }
         int rectAreaPct = (int)(boundingRect.area()/(double)imageSize * 100);
         if( rectAreaPct >  minRectSizePct &&  rectAreaPct < maxRectSizePct) {
             if (DEBUG) Log.d(TAG, "Rectangle included. Area%: " + rectAreaPct);
@@ -304,36 +329,31 @@ public class FaceDetectUtil {
                 if (DEBUG) Log.d(TAG, "Shape included. numberVertices: " + numberVertices);
 
                 MatOfPoint approxCurveInt = new MatOfPoint(approxCurve.toArray());
-                if( DISPLAY_APPROX_CONTOURS ) {
-                    displayPoly( originalImage, monoImage, approxCurveInt, new Scalar(30, 255, 255) );     // white
-                }
+                result.approxContour = approxCurveInt;
+//                if( DISPLAY_APPROX_CONTOURS ) {
+//                    displayPoly( originalImage, monoImage, approxCurveInt, new Scalar(30, 255, 255) );     // white
+//                }
 
                 // Get the hull
                 MatOfInt hull = new MatOfInt();
                 Imgproc.convexHull(approxCurveInt, hull);
 
                 MatOfPoint hullPoints = hullToMapOfPoint(approxCurveInt, hull );
-                 if( DISPLAY_HULL ) {
-                    displayPoly( originalImage, monoImage, hullPoints, new Scalar(0, 0, 255) );     // Blue
-                }
+                result.hull = hullPoints;
+//                 if( DISPLAY_HULL ) {
+//                    displayPoly( originalImage, monoImage, hullPoints, new Scalar(0, 0, 255) );     // Blue
+//                }
 
                 double hullArea = Imgproc.contourArea( hullPoints);
                 double polyArea = Imgproc.contourArea( approxCurveInt);
                 int areaRatioPct = (int)(polyArea/hullArea *100);
 
-//                if (DEBUG) Log.d(TAG, "hullArea: " + hullArea +
-//                        ". polyArea " + polyArea +
-//                        ". areaRatioPct: " + areaRatioPct);
 
                 if( areaRatioPct > 85 ){
                     if (DEBUG) Log.d(TAG, "Shape MATCH: areaRatioPct " + areaRatioPct );
 
                     // Checking that width fits withing screen. (Too wide is rejected)
                     int screenWidth = monoImage.width();
-                    if( screenWidth == 640 ){
-                        // There is an 80 pixel, left/right margin... (TODO CLeanup)
-                        screenWidth -= 2 *80;
-                    }
                     int screenPct = (int)((double)boundingRect.width/(double)screenWidth*100);
 
                     if(screenPct < maxScreenPct ) {
@@ -343,15 +363,15 @@ public class FaceDetectUtil {
                         int widthPct = (int) ((double) boundingRect.width / (double) boundingRect.height * 100);
                         if (widthPct <= maxWidthPct && widthPct >= minWidthPct) {
                             if (DEBUG) Log.d(TAG, "Width/Height MATCH: widthPct " + widthPct);
-                            faceDetected = true;
-                            if (DISPLAY_CONTOUR_RECTS) {
-                                Imgproc.rectangle(
-                                        originalImage,
-                                        new Point(boundingRect.x, boundingRect.y),
-                                        new Point(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height),
-                                        new Scalar(0, 0, 255),
-                                        2);
-                            }
+                            result.isFace = true;
+//                            if (DISPLAY_CONTOUR_RECTS) {
+//                                Imgproc.rectangle(
+//                                        originalImage,
+//                                        new Point(boundingRect.x, boundingRect.y),
+//                                        new Point(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height),
+//                                        new Scalar(0, 0, 255),
+//                                        2);
+//                            }
                         } else {
                             if (DEBUG) Log.d(TAG, "Width/Height MISMATCH: widthPct " + widthPct);
                         }
@@ -362,43 +382,6 @@ public class FaceDetectUtil {
                 }else{
                     if (DEBUG) Log.d(TAG, "Shape MISMATCH: areaRatioPct " + areaRatioPct );
                 }
-                return faceDetected ? originalImage : null;
-
-//                // test defects from hull
-//                MatOfInt4 convexityDefects = new MatOfInt4();
-//                Imgproc.convexityDefects(approxCurveInt, hull, convexityDefects);
-//                faceDetected = true;
-//                if( convexityDefects.total() > 0 ) {
-//                    double acculatedDistance = 0;
-//                    int defects[] = convexityDefects.toArray();
-//                    // see https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=convexhull#convexitydefects
-//                    // For details on the format, (ugly) of results of convexityDefects
-//                    for (int idx = 3; idx < defects.length; idx += 4) {
-//                        double distance = (double) defects[idx] / 256;
-//                        if (DEBUG) Log.d(TAG, "Distance: " + distance);
-//                        acculatedDistance += distance;
-//                    }
-//                    double defectPct = acculatedDistance/boundingRect.area() *100;
-//                    if (DEBUG) Log.d(TAG, "acculatedDistance: " + acculatedDistance +
-//                             ". boundingRect.width " + boundingRect.width +
-//                             ". boundingRect.height " + boundingRect.height +
-//                             ". defectPct: " + defectPct);
-//
-//                    if(defectPct > 0.9 ){       // Empirical
-//                        faceDetected = false;
-//                    }else{
-//                        if(DISPLAY_CONTOUR_RECTS) {
-//                            Imgproc.rectangle(
-//                                    originalImage,
-//                                    new Point(boundingRect.x, boundingRect.y),
-//                                    new Point(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height),
-//                                    new Scalar(0, 0, 255),
-//                                    2);
-//                        }
-//
-//                    }
-//                }
-
             }else{
                 if (DEBUG) Log.d(TAG, "Contour excluded. Too few numberVertices: " + numberVertices);
             }
@@ -406,13 +389,22 @@ public class FaceDetectUtil {
         }else{
             if (DEBUG) Log.d(TAG, "Rectangle excluded. Area too small/large, Area%: " + rectAreaPct);
         }
-        return null;
+        return result;
     }
 
-    private void displayPoly( Mat originalImage, Mat monoImage, MatOfPoint poly, Scalar color ){
+    public void displayPoly( Mat originalImage, MatOfPoint poly, Scalar color ){
         List<MatOfPoint> polyList = new ArrayList<>();
-        polyList.add(poly);
-        Imgproc.drawContours(originalImage, polyList, 0, color, 2);  // voilet
+        Point[] pts = poly.toArray();
+        int xyScale = 448/32;
+        for( Point pt : pts){
+            pt.x = ((pt.x - MatBuffer )* xyScale) + ((640-448)/2);
+            pt.y = ((pt.y - MatBuffer )* xyScale) + ((480-448)/2);
+        }
+
+        MatOfPoint scaledPoints = new MatOfPoint();
+        scaledPoints.fromArray(pts);
+        polyList.add(scaledPoints);
+        Imgproc.drawContours(originalImage, polyList, 0, color, 2);
 
     }
 
@@ -570,5 +562,35 @@ public class FaceDetectUtil {
         MatOfInt4 convexityDefects = new MatOfInt4();
         Imgproc.convexityDefects(points, hull, convexityDefects);
         if (DEBUG) Log.d(TAG, "Whoo-hoo");
+     }
+     /* Generate 32*32 temperature 2D array from thermal images
+        Note - this is temporary as eventually the thermal map will be the input rather than an image
+     */
+     public int[][] getTemperatures( Mat srcImage){
+        int[][] thermalMap = new int[MaxThermalRows][MaxThermalCols];
+        // Note that the thermal pixels in srcImage are a 448 * 448 rectangle, centered in a 640 * 480 image
+        int xyDelta = 14;   // Pixel blocks are 448/32 apart
+        int rowOffset =  (480-448)/2;
+        int colOffset = (640 -448)/2;
+        for( int rowIndex = 0; rowIndex < MaxThermalRows; rowIndex++ ) {
+            for( int colIndex = 0; colIndex < MaxThermalCols; colIndex++ ) {
+                double[] RGBCenter = srcImage.get( ((rowIndex * xyDelta) + xyDelta/2)+rowOffset,
+                        ((colIndex * xyDelta) + xyDelta/2) + colOffset);
+                long RGBLong = (long)RGBCenter[0] << 16;
+                RGBLong |= (long)RGBCenter[1] << 8;
+                RGBLong |= (long)RGBCenter[2];
+                try {
+                    float tempFloat = PixelToTemperature.getTemperatureFromRGB(RGBLong);
+                    // This is degree C. Convert to int *10
+                    int tempInt = (int) (tempFloat * 10);
+                    thermalMap[rowIndex][colIndex] = tempInt;
+                }catch (Exception ex){
+                    if (DEBUG) Log.d(TAG, ex.getMessage());
+                }
+            }
+
+        }
+
+        return thermalMap;
      }
 }
