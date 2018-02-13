@@ -1,6 +1,5 @@
 package com.example.fredoleary.thermalimage1;
 
-import android.graphics.Bitmap;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,7 +14,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,9 +23,8 @@ import static java.lang.Boolean.TRUE;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static boolean DISPLAY_CONTOURS =  FALSE;            // Displays the contour lines in red
+    private static boolean DISPLAY_CONTOURS =  TRUE;            // Displays the contour lines in red
     private static boolean DISPLAY_CONTOUR_RECTS =  TRUE;      // Displays the contour covering rectangle in blue
-    private static boolean DISPLAY_COVER_RECT =  FALSE;         // Displays the union of all contour covering rectangles in blue
     private static boolean DISPLAY_APPROX_CONTOURS = TRUE;     // Displays the approx lines in
     private static boolean DISPLAY_HULL = TRUE;                 // Displays the Hull in blue
 
@@ -46,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
     private FaceDetectUtil thermalUtil;
     private int nextIndex = 0;
 //    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.bb087);
-    private boolean showAll = false;
+    private boolean showAll = true;
 
     private List<imageEntry> oneImage = Arrays.asList(
-            new imageEntry( R.drawable.s2_009, true )
+            new imageEntry( R.drawable.s15_047, true )
     );
 
     /*
@@ -99,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.x007, true ),
             new imageEntry( R.drawable.x008, true ),
             new imageEntry( R.drawable.x009, true ),
+
             new imageEntry( R.drawable.x010, false ),
             new imageEntry( R.drawable.x011, false ),
             new imageEntry( R.drawable.x012, false ),
@@ -106,20 +104,14 @@ public class MainActivity extends AppCompatActivity {
             new imageEntry( R.drawable.x014, true ),
             new imageEntry( R.drawable.x015, true ),
             new imageEntry( R.drawable.x016, true ),
-
             new imageEntry( R.drawable.y001, false ),
             new imageEntry( R.drawable.y007, false ),
             new imageEntry( R.drawable.z003, false ),
 
             new imageEntry( R.drawable.s10_011, false ),
-            new imageEntry( R.drawable.s10_026, false ),
-            new imageEntry( R.drawable.s10_031, false ),
-
             new imageEntry( R.drawable.s11_087, false ),
-            new imageEntry( R.drawable.s11_096, false ),
             new imageEntry( R.drawable.s11_101, false ),
             new imageEntry( R.drawable.s11_114, false ),
-
             new imageEntry( R.drawable.s12_001, false ),
             new imageEntry( R.drawable.s12_003, false ),
             new imageEntry( R.drawable.s12_005, false ),
@@ -184,16 +176,16 @@ public class MainActivity extends AppCompatActivity {
         originalImage = thermalUtil.getImage( this, img.resId);
         int[][] thermalMap = thermalUtil.getTemperatures(originalImage);
         if(originalImage != null){
-            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( originalImage, thermalMap );
+            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( thermalMap );
             monoChromeImage = maskAndContours[0];
             contourImage = maskAndContours[1];
 //            Mat monoImageInv = new Mat();
 //            Core.bitwise_not ( monoChromeImage, monoImageInv );
-            List<FaceDetectUtil.DetectResult> results = thermalUtil.processContours( contourImage, originalImage);
+            List<FaceDetectUtil.DetectResult> results = thermalUtil.processContours( contourImage );
             // Draw results on originalImage
             drawResults( thermalUtil, originalImage, results );
             thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
-            TextView resultTextView = (TextView)findViewById(R.id.imageDetect);
+            TextView resultTextView = findViewById(R.id.imageDetect);
             int displayIndex = nextIndex + 1;
             boolean faceDetected = false;
             for( FaceDetectUtil.DetectResult result :results ){
@@ -232,10 +224,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void drawResults(FaceDetectUtil util, Mat originalImage, List<FaceDetectUtil.DetectResult> results){
         for(FaceDetectUtil.DetectResult result : results){
-            if( DISPLAY_APPROX_CONTOURS  && result.approxContour != null) {
-                util.displayPoly( originalImage, result.approxContour, new Scalar(30, 255, 255) );     // white
+            if( DISPLAY_CONTOURS && result.contour != null ){
+                util.displayPoly( originalImage, result.contour, new Scalar(255, 0, 0) );     // red
+
             }
-            if (DISPLAY_CONTOUR_RECTS && result.isFace && result.rect != null) {
+            if( DISPLAY_APPROX_CONTOURS  && result.approxContour != null) {
+                util.displayPoly( originalImage, result.approxContour, new Scalar(30, 255, 255) );     // acqa
+            }
+
+            if( DISPLAY_HULL && result.hull != null ){
+                util.displayPoly( originalImage, result.hull, new Scalar(0, 0, 255) );     // blue
+            }
+            if (DISPLAY_CONTOUR_RECTS && result.rect != null) {
                 MatOfPoint rect = new MatOfPoint();
                 Point[] rectPts = new Point[5];
                 rectPts[0] = new Point( result.rect.x, result.rect.y);
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                 rect.fromArray( rectPts);
-                util.displayPoly( originalImage, rect, new Scalar(0, 0, 255) );
+                util.displayPoly( originalImage, rect, new Scalar(0, 0, 255) ); // Blue
             }
 
         }
