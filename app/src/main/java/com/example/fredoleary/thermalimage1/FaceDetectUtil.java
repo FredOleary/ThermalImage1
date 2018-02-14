@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.opencv.imgproc.Imgproc.MORPH_DILATE;
+import static org.opencv.imgproc.Imgproc.MORPH_ERODE;
 
 
 /**
@@ -141,13 +142,16 @@ public class FaceDetectUtil {
         initializeFromCentigrade(monSource, thermalData );
         results[0] = monSource;
 
-        int morph_size = 1;
+        int morph_size = 2;
         Mat element = Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( morph_size + 1, morph_size+1 ), new Point( morph_size, morph_size ) );
 
         Mat morphedMask = new Mat();
 
         Point kernel = new Point(-1,-1);
         Imgproc.morphologyEx( monSource, morphedMask, MORPH_DILATE, element, kernel, 3);
+
+//        Mat morphedMaskErode = new Mat();
+//        Imgproc.morphologyEx( morphedMask, morphedMaskErode, MORPH_ERODE, element, kernel, 1);
 
         results[0] = morphedMask;
 
