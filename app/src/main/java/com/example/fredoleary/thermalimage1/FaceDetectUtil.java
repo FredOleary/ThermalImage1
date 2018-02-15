@@ -142,7 +142,7 @@ public class FaceDetectUtil {
         initializeFromCentigrade(monSource, thermalData );
         results[0] = monSource;
 
-        int morph_size = 2;
+        int morph_size = 1;
         Mat element = Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( morph_size + 1, morph_size+1 ), new Point( morph_size, morph_size ) );
 
         Mat morphedMask = new Mat();
@@ -264,22 +264,10 @@ public class FaceDetectUtil {
         }else{
             if (DEBUG) Log.d(TAG, "Rectangle excluded. Area too small/large, Area%: " + rectAreaPct);
         }
-        clipRect( result.rect );
         return result;
     }
 
-    /*
-    Clip the bounding rect so that it lies within the 32*32 area. The effect of dilating the monochrome
-    image is that some points may lie outside this region
-     */
-    private void clipRect( Rect rect ){
 
-       if( rect.x < MatBuffer) rect.x = MatBuffer;
-       if( rect.y < MatBuffer) rect.y = MatBuffer;
-       if( (rect.x - MatBuffer) + rect.width > MaxThermalCols) rect.width = MaxThermalCols - (rect.x - MatBuffer);
-       if( (rect.y - MatBuffer) + rect.height > MaxThermalRows) rect.height = MaxThermalRows - (rect.y - MatBuffer);
-
-    }
     public void displayPoly( Mat originalImage, MatOfPoint poly, Scalar color ){
         List<MatOfPoint> polyList = new ArrayList<>();
         Point[] pts = poly.toArray();
@@ -293,6 +281,60 @@ public class FaceDetectUtil {
         scaledPoints.fromArray(pts);
         polyList.add(scaledPoints);
         Imgproc.drawContours(originalImage, polyList, 0, color, 2);
+
+    }
+
+    /*/
+    The cover rectangle should be adjusted to account for dilation and clipped to the boundry
+    (Note that this isn't done for displayPoly above since displayPoly is used only for debugging
+     */
+    public void displayCoverRect( Mat originalImage, Rect rect, Scalar color ){
+        double dilation = 2.5/32;
+//        double dilation = 0;
+
+        double xScale = 448/32.0;   // Maps 32 * 32 space to 448 * 448 to space
+        double yScale = 448/32.0;
+
+        double xOffset = (640-448)/2; // Horizontally centers 448 in 640 frame
+        double yOffset = (480-448)/2; // vertically centers 448 in 480 frame
+
+        double antiDilation = 1.0 - dilation;
+
+
+        /*
+        In opencv coordinate system, pixels are top/left centered. As such a rectangle to cover
+        all points polygon is one larger in each dimension than the max x/y. In the 32*32 to
+        448 * 448 transform this results in an additional cover of 14 pixels
+         */
+        rect.width -= 1;
+        rect.height -= 1;
+
+        double width = antiDilation * rect.width;
+        double height = antiDilation * rect.height;
+
+        double x1 = rect.x + (rect.width - width)/2;
+        double y1 = rect.y + (rect.height - height)/2;
+
+        Point tl = new Point ( (int)(((x1 - MatBuffer )* xScale) + xOffset),
+                (int)(((y1 - MatBuffer )* yScale) + yOffset));
+
+        Point br = new Point ( (int)(((x1 + width- MatBuffer )* xScale) + xOffset),
+                (int)(((y1 + height - MatBuffer )* yScale) + yOffset));
+
+        // Finally clip points to lie inside the 448 * 448
+        if( tl.x < xOffset) tl.x = xOffset;
+        if( tl.x > xOffset + 448) tl.x = xOffset +448;
+        if( tl.y < yOffset) tl.y = yOffset;
+        if( tl.y > yOffset + 448) tl.y= yOffset +448;
+
+        if( br.x < xOffset) br.x = xOffset;
+        if( br.x > xOffset + 448) br.x = xOffset +448;
+        if( br.y < yOffset) br.y = yOffset;
+        if( br.y > yOffset + 448) br.y= yOffset +448;
+
+
+        Imgproc.rectangle( originalImage, tl, br, color,2);
+
 
     }
 

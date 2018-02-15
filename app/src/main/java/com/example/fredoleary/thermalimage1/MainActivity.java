@@ -20,7 +20,6 @@ import org.opencv.imgproc.Imgproc;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
 public class MainActivity extends AppCompatActivity {
@@ -45,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
     private FaceDetectUtil thermalUtil;
     private int nextIndex = 0;
 //    private List<Integer> imageIdsOne = Arrays.asList(R.drawable.bb087);
-    private boolean showAll = false;
-    private boolean showOriginalImage = false;
+    private boolean showAll = true;
+    private boolean debug32by32Image = false;
 
     private List<imageEntry> oneImage = Arrays.asList(
             new imageEntry( R.drawable.s15_047, true )
@@ -248,13 +247,13 @@ public class MainActivity extends AppCompatActivity {
         originalImage = thermalUtil.getImage( this, img.resId);
         int[][] thermalMap = thermalUtil.getTemperatures(originalImage);
         if(originalImage != null){
-//            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( thermalMap );
-            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( thermal_data3 );
+            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( thermalMap );
+//            Mat[] maskAndContours = thermalUtil.getMonoChromeImageEx( thermal_data3 );
             monoChromeImage = maskAndContours[0];
             contourImage = maskAndContours[1];
 
             List<FaceDetectUtil.DetectResult> results = thermalUtil.processContours( contourImage );
-            if( showOriginalImage) {
+            if(! debug32by32Image) {
                 // Draw results on originalImage
                 drawResults(thermalUtil, originalImage, results);
                 thermalUtil.displayImage(this, (ImageView) (this.findViewById(R.id.imgview)), originalImage);
@@ -286,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }else{
                 // For debug. Show the 32*32 image instead of the original
-                debugMonoImage(results, contourImage);
+                debugMonoImage(results, monoChromeImage);
             }
         }else{
             Log.e(TAG, "IMAGE NOT FOUND");
@@ -327,17 +326,7 @@ public class MainActivity extends AppCompatActivity {
                 util.displayPoly( originalImage, result.hull, new Scalar(0, 0, 255) );     // blue
             }
             if (DISPLAY_CONTOUR_RECTS && result.rect != null) {
-                MatOfPoint rect = new MatOfPoint();
-                Point[] rectPts = new Point[5];
-                rectPts[0] = new Point( result.rect.x, result.rect.y);
-                rectPts[1] = new Point( result.rect.x, result.rect.y + result.rect.height);
-                rectPts[2] = new Point( result.rect.x + result.rect.width, result.rect.y + result.rect.height);
-                rectPts[3] = new Point( result.rect.x + result.rect.width, result.rect.y);
-                rectPts[4] = new Point( result.rect.x, result.rect.y);
-
-
-                rect.fromArray( rectPts);
-                util.displayPoly( originalImage, rect, new Scalar(0, 0, 255) ); // Blue
+                util.displayCoverRect( originalImage, result.rect.clone(), new Scalar(0, 0, 255) ); // Blue
             }
 
         }
